@@ -549,7 +549,7 @@ def _wait_and_warmup(server_args, pipe_finish_writer):
     if not success:
         if pipe_finish_writer is not None:
             pipe_finish_writer.send(last_traceback)
-        logger.error(f"Initialization failed. warmup error: {last_traceback}")
+        logger.error(f"Initialization failed. server not launched: {last_traceback}")
         kill_child_process(include_self=True)
         return
 
