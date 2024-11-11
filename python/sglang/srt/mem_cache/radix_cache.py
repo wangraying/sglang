@@ -20,6 +20,7 @@ The radix tree data structure for managing the KV cache.
 """
 
 import heapq
+import logging
 import time
 from collections import defaultdict
 from typing import TYPE_CHECKING, Callable, List, Optional
@@ -32,6 +33,7 @@ from sglang.srt.mem_cache.memory_pool import BaseTokenToKVPool, ReqToTokenPool
 if TYPE_CHECKING:
     from sglang.srt.managers.schedule_batch import Req
 
+logger = logging.getLogger(__name__)
 
 class TreeNode:
     def __init__(self):
@@ -118,6 +120,10 @@ class RadixCache(BasePrefixCache):
             req.req_pool_idx, : len(token_ids)
         ]
 
+        self.pretty_print()
+        logger.debug(f"Caching finished, tokens: {token_ids}")
+        logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
+
         # Radix Cache takes one ref in memory pool
         new_prefix_len = self.insert(token_ids, kv_indices.clone())
         self.token_to_kv_pool.free(kv_indices[len(req.prefix_indices) : new_prefix_len])
@@ -125,6 +131,9 @@ class RadixCache(BasePrefixCache):
         # Remove req slot release the cache lock
         self.req_to_token_pool.free(req.req_pool_idx)
         self.dec_lock_ref(req.last_node)
+        logger.debug(f"Free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
+        logger.debug(f"Free req_pool_idx: {req.req_pool_idx}")
+        self.pretty_print()
 
     def cache_unfinished_req(self, req: Req, token_ids: Optional[List[int]] = None):
         """Cache request when it is unfinished."""
@@ -134,12 +143,16 @@ class RadixCache(BasePrefixCache):
         if token_ids is None:
             token_ids = req.fill_ids
 
+        self.pretty_print()
+        logger.debug(f"Caching unfinished, tokens: {token_ids}")
+        logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
         kv_indices = self.req_to_token_pool.req_to_token[
             req.req_pool_idx, : len(token_ids)
         ]
 
         # Radix Cache takes one ref in memory pool
         new_prefix_len = self.insert(token_ids, kv_indices.clone())
+        logger.debug(f"Free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
         self.token_to_kv_pool.free(kv_indices[len(req.prefix_indices) : new_prefix_len])
 
         # The prefix indices could be updated, reuse it
@@ -150,14 +163,19 @@ class RadixCache(BasePrefixCache):
             new_indices[len(req.prefix_indices) :],
         )
 
+        logger.debug(f"After caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
+        logger.debug(f"Update prefix match result, prefix_indices: {req.prefix_indices.data} -> {new_indices.data}, last_node: {req.last_node.key} -> {new_last_node.key}")
+
         self.dec_lock_ref(req.last_node)
         self.inc_lock_ref(new_last_node)
         req.prefix_indices = new_indices
         req.last_node = new_last_node
+        self.pretty_print()
 
     def pretty_print(self):
-        self._print_helper(self.root_node, 0)
-        print(f"#tokens: {self.total_size()}")
+        s = "Radix Tree:\n"
+        s += self._print_helper(self.root_node, 0)
+        logger.debug(f"{s}#tokens: {self.total_size()}")
 
     def total_size(self):
         return self._total_size_helper(self.root_node)
@@ -281,9 +299,11 @@ class RadixCache(BasePrefixCache):
         return 0
 
     def _print_helper(self, node: TreeNode, indent: int):
+        s: str = ""
         for _, child in node.children.items():
-            print(" " * indent, len(child.key), child.key[:10], f"r={child.lock_ref}")
-            self._print_helper(child, indent=indent + 2)
+            s += f"{' ' * indent}{len(child.key)} {child.key[:10]} r={child.lock_ref}\n"
+            s += self._print_helper(child, indent=indent + 2)
+        return s
 
     def _delete_leaf(self, node):
         for k, v in node.parent.children.items():

@@ -641,6 +641,8 @@ class ScheduleBatch:
                 out_cache_loc[pt : pt + req.extend_input_len],
             )
 
+            logger.debug(f"Extend req, prefix indices: {req.prefix_indices}, fill ids: {req.fill_ids}, allocate pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
+
             # Compute the relative logprob_start_len in an extend batch
             if req.logprob_start_len >= pre_len:
                 extend_logprob_start_len = min(

@@ -75,7 +75,7 @@ class ServerArgs:
     api_key: Optional[str] = None
     file_storage_pth: str = "SGLang_storage"
     enable_cache_report: bool = False
-    watchdog_timeout: float = 600
+    watchdog_timeout: float = 6000
 
     # Data parallelism
     dp_size: int = 1
