@@ -15,6 +15,7 @@ limitations under the License.
 
 """Request scheduler policy"""
 
+import logging
 import os
 import random
 from collections import defaultdict
@@ -33,6 +34,9 @@ from sglang.srt.mem_cache.radix_cache import TreeNode
 CLIP_MAX_NEW_TOKENS_ESTIMATION = int(
     os.environ.get("SGLANG_CLIP_MAX_NEW_TOKENS_ESTIMATION", "4096")
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class SchedulePolicy:
@@ -296,6 +300,7 @@ class PrefillAdder:
             return AddReqResult.OTHER
 
         with self._lock_node(req.last_node):
+            logger.debug(f"Add req, total_tokens: {total_tokens}, rem_total_tokens: {self.rem_total_tokens}")
             if total_tokens > self.rem_total_tokens:
                 return AddReqResult.NO_TOKEN
 

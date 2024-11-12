@@ -518,6 +518,7 @@ class ScheduleBatch:
 
         if out_cache_loc is None:
             if self.tree_cache is not None:
+                logger.debug(f"Allocation failed, evicting {num_tokens} tokens")
                 self.tree_cache.evict(num_tokens, self.token_to_kv_pool.free)
                 out_cache_loc = self.token_to_kv_pool.alloc(num_tokens)
 
@@ -716,6 +717,7 @@ class ScheduleBatch:
         if self.token_to_kv_pool.available_size() >= bs:
             return True
 
+        logger.debug(f"Check decode mem failed, available size: {self.token_to_kv_pool.available_size()}, evicting {bs} tokens")
         self.tree_cache.evict(bs, self.token_to_kv_pool.free)
 
         if self.token_to_kv_pool.available_size() >= bs:
@@ -781,6 +783,7 @@ class ScheduleBatch:
                     - self.token_to_kv_pool.available_size()
                 )
                 residual_size = max(0, residual_size)
+                logger.debug(f"Retract decode, evicting {residual_size} tokens")
                 self.tree_cache.evict(residual_size, self.token_to_kv_pool.free)
 
             req.prefix_indices = []

@@ -33,7 +33,9 @@ from sglang.srt.mem_cache.memory_pool import BaseTokenToKVPool, ReqToTokenPool
 if TYPE_CHECKING:
     from sglang.srt.managers.schedule_batch import Req
 
+
 logger = logging.getLogger(__name__)
+
 
 class TreeNode:
     def __init__(self):
@@ -120,7 +122,7 @@ class RadixCache(BasePrefixCache):
             req.req_pool_idx, : len(token_ids)
         ]
 
-        self.pretty_print()
+        self.pretty_print(print_value=True)
         logger.debug(f"Caching finished, tokens: {token_ids}")
         logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
 
@@ -131,9 +133,8 @@ class RadixCache(BasePrefixCache):
         # Remove req slot release the cache lock
         self.req_to_token_pool.free(req.req_pool_idx)
         self.dec_lock_ref(req.last_node)
-        logger.debug(f"Free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
-        logger.debug(f"Free req_pool_idx: {req.req_pool_idx}")
-        self.pretty_print()
+        logger.debug(f"Free req_pool_idx: {req.req_pool_idx}, free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
+        self.pretty_print(print_value=True)
 
     def cache_unfinished_req(self, req: Req, token_ids: Optional[List[int]] = None):
         """Cache request when it is unfinished."""
@@ -143,7 +144,6 @@ class RadixCache(BasePrefixCache):
         if token_ids is None:
             token_ids = req.fill_ids
 
-        self.pretty_print()
         logger.debug(f"Caching unfinished, tokens: {token_ids}")
         logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
         kv_indices = self.req_to_token_pool.req_to_token[
@@ -152,7 +152,6 @@ class RadixCache(BasePrefixCache):
 
         # Radix Cache takes one ref in memory pool
         new_prefix_len = self.insert(token_ids, kv_indices.clone())
-        logger.debug(f"Free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
         self.token_to_kv_pool.free(kv_indices[len(req.prefix_indices) : new_prefix_len])
 
         # The prefix indices could be updated, reuse it
@@ -164,7 +163,7 @@ class RadixCache(BasePrefixCache):
         )
 
         logger.debug(f"After caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
-        logger.debug(f"Update prefix match result, prefix_indices: {req.prefix_indices.data} -> {new_indices.data}, last_node: {req.last_node.key} -> {new_last_node.key}")
+        logger.debug(f"Update prefix match result, prefix_indices: {req.prefix_indices.data} -> {new_indices.data}, last_node: {req.last_node.key} -> {new_last_node.key}, {req.last_node.value} -> {new_last_node.value}")
 
         self.dec_lock_ref(req.last_node)
         self.inc_lock_ref(new_last_node)
@@ -172,9 +171,9 @@ class RadixCache(BasePrefixCache):
         req.last_node = new_last_node
         self.pretty_print()
 
-    def pretty_print(self):
+    def pretty_print(self, print_value=False)
         s = "Radix Tree:\n"
-        s += self._print_helper(self.root_node, 0)
+        s += self._print_helper(self.root_node, 0, print_value)
         logger.debug(f"{s}#tokens: {self.total_size()}")
 
     def total_size(self):
@@ -198,10 +197,13 @@ class RadixCache(BasePrefixCache):
 
             evict_callback(x.value)
             num_evicted += len(x.value)
+            logger.debug(f"Evict node: key={x.key}, value={x.value}, num_evicted: {num_evicted}")
             self._delete_leaf(x)
 
             if len(x.parent.children) == 0:
                 heapq.heappush(leaves, x.parent)
+
+        self.pretty_print()
 
     def inc_lock_ref(self, node: TreeNode):
         if self.disable:
@@ -298,11 +300,14 @@ class RadixCache(BasePrefixCache):
             self.evictable_size_ += len(value)
         return 0
 
-    def _print_helper(self, node: TreeNode, indent: int):
+    def _print_helper(self, node: TreeNode, indent: int, print_value=False):
         s: str = ""
         for _, child in node.children.items():
-            s += f"{' ' * indent}{len(child.key)} {child.key[:10]} r={child.lock_ref}\n"
-            s += self._print_helper(child, indent=indent + 2)
+            if print_value:
+                s += f"{' ' * indent}{len(child.key)} {child.key[:10]} v={child.value} r={child.lock_ref}\n"
+            else:
+                s += f"{' ' * indent}{len(child.key)} {child.key[:10]} r={child.lock_ref}\n"
+            s += self._print_helper(child, indent=indent + 2, print_value=print_value)
         return s
 
     def _delete_leaf(self, node):
