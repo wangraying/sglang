@@ -618,6 +618,7 @@ class ScheduleBatch:
         # Allocate memory
         req_pool_indices = self.alloc_req_slots(bs)
         out_cache_loc = self.alloc_token_slots(extend_num_tokens)
+        logger.debug(f"Allocated slots from KV Cache Pool for extend: {out_cache_loc}")
 
         pt = 0
         for i, req in enumerate(reqs):
@@ -875,6 +876,7 @@ class ScheduleBatch:
         # Alloc mem
         bs = len(self.reqs)
         self.out_cache_loc = self.alloc_token_slots(bs)
+        logger.debug(f"Allocated slots from KV Cache Pool for decode: {self.out_cache_loc}")
 
         if self.model_config.is_encoder_decoder:
             locs = self.encoder_lens + self.seq_lens

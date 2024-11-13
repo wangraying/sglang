@@ -563,12 +563,12 @@ class Scheduler:
                     logger.debug(f"Set prefill batch to running batch, size: {self.running_batch.batch_size()}")
                 else:
                     self.running_batch.merge_batch(self.last_batch)
-                    logger.debug(f"Merge prefill batch into running batch, size: {self.running_batch.batch_size()}, output_ids: {self.running_batch.output_ids}, seq_lens: {self.running_batch.seq_lens}")
+                    logger.debug(f"Merge prefill batch into running batch, size: {self.running_batch.batch_size()}, output_ids: {self.running_batch.output_ids.cpu().numpy()}, seq_lens: {self.running_batch.seq_lens}")
 
         # Prefill first
         new_batch = self.get_new_batch_prefill()
         if new_batch is not None:
-            logger.debug(f"Prefill new batch, size: {new_batch.batch_size()}, input_ids: {new_batch.input_ids}, seq_lens: {new_batch.seq_lens}, prefix_lens: {new_batch.prefix_lens}, extend_lens: {new_batch.extend_lens}")
+            logger.debug(f"Prefill new batch, size: {new_batch.batch_size()}, input_ids: {new_batch.input_ids.cpu().numpy()}, seq_lens: {new_batch.seq_lens}, prefix_lens: {new_batch.prefix_lens}, extend_lens: {new_batch.extend_lens}")
             return new_batch
 
         # Check memory
@@ -760,10 +760,12 @@ class Scheduler:
             )
             self.waiting_queue.extend(retracted_reqs)
         else:
+            old_ratio = self.new_token_ratio
             self.new_token_ratio = max(
                 self.new_token_ratio - self.new_token_ratio_decay,
                 self.min_new_token_ratio,
             )
+            logger.debug(f"Decay new_token_ratio: {old_ratio:.4f} -> {self.new_token_ratio:.4f}")
 
         # Check for jump-forward
         if not self.disable_regex_jump_forward:
@@ -802,7 +804,7 @@ class Scheduler:
                     next_token_ids = torch.full((batch.batch_size(),), 0)
             batch.output_ids = next_token_ids
             ret = logits_output, next_token_ids, model_worker_batch.bid
-            logger.debug(f"Run batch #{model_worker_batch.bid}, mode={batch.forward_mode}, input_ids={model_worker_batch.input_ids}, output_ids={next_token_ids}")
+            logger.debug(f"Run batch #{model_worker_batch.bid}, mode={batch.forward_mode}, input_ids={model_worker_batch.input_ids.cpu().numpy()}, output_ids={next_token_ids.cpu().numpy()}")
         else:  # embedding or reward model
             assert batch.extend_num_tokens != 0
             model_worker_batch = batch.get_model_worker_batch()

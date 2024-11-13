@@ -154,16 +154,13 @@ class PrefillAdder:
 
         if running_batch is not None:
             # Pre-remove the tokens which will be occupied by the running requests
-            self.rem_total_tokens -= sum(
-                [
-                    min(
+            for r in running_batch.reqs:
+                self.rem_total_tokens -=  min(
                         (r.sampling_params.max_new_tokens - len(r.output_ids)),
                         CLIP_MAX_NEW_TOKENS_ESTIMATION,
-                    )
-                    * self.new_token_ratio
-                    for r in running_batch.reqs
-                ]
-            )
+                    ) * self.new_token_ratio
+
+        logger.debug(f"PrefillAdder init, rem_total_tokens: {self.rem_total_tokens}, rem_input_tokens: {self.rem_input_tokens}, rem_chunk_tokens: {self.rem_chunk_tokens}, new_token_ratio: {self.new_token_ratio}")
 
     def budget_state(self):
         if self.rem_total_tokens <= 0 or self.cur_rem_tokens <= 0:

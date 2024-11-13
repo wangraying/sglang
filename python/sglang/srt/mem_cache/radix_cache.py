@@ -171,7 +171,7 @@ class RadixCache(BasePrefixCache):
         req.last_node = new_last_node
         self.pretty_print()
 
-    def pretty_print(self, print_value=False)
+    def pretty_print(self, print_value=False):
         s = "Radix Tree:\n"
         s += self._print_helper(self.root_node, 0, print_value)
         logger.debug(f"{s}#tokens: {self.total_size()}")
