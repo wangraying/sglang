@@ -455,6 +455,25 @@ def get_dataset(args, tokenizer):
     return input_requests
 
 
+def get_server_args(args):
+    server_args = {}
+    if args.backend == "sglang":
+        server_url = (
+            f"{args.base_url}/get_server_args"
+            if args.base_url
+            else f"http://{args.host}:{args.port}/get_server_args"
+        )
+
+        try:
+            response = requests.get(server_url)
+            response.raise_for_status()
+            server_args = response.json()
+        except Exception as e:
+            print(f"Failed to get server args from {server_url}. Error: {e}")
+
+    return server_args
+
+
 ASYNC_REQUEST_FUNCS = {
     "sglang": async_request_sglang_generate,
     "sglang-native": async_request_sglang_generate,
@@ -1132,15 +1151,20 @@ def run_benchmark(args_: argparse.Namespace):
             "Because when the tokenizer counts the output tokens, if there is gibberish, it might count incorrectly.\n"
         )
 
-    # set output path
+    # Set output path
     if not args.output_path:
         now = datetime.now().strftime("%m%d%H%M%S")
         args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_{args.num_prompts}"
         os.makedirs(args.output_path, exist_ok=True)
 
     print(f"{args}\n")
+
+    # Save experiment config
+    server_args = get_server_args(args)
+    print(f"Server args: {server_args}")
     with open(f"{args.output_path}/experiment_config.json", "w") as f:
-        json.dump(vars(args), f, indent=4)
+        f.write(json.dumps(server_args, indent=4) + "\n")
+        f.write(json.dumps(vars(args), indent=4) + "\n")
 
     # Read dataset
     backend = args.backend
@@ -1151,7 +1175,7 @@ def run_benchmark(args_: argparse.Namespace):
 
     input_requests = get_dataset(args, tokenizer)
 
-    if not args.disable_dump_requests:
+    if args.enable_dump_requests:
         with open(f"{args.output_path}/dumped_requests.json", "w") as f:
             json.dump(input_requests, f)
 
@@ -1347,9 +1371,9 @@ if __name__ == "__main__":
         help="Target length in tokens for outputs in generated-shared-prefix dataset",
     )
     group.add_argument(
-        "--disable-dump-requests",
+        "--enable-dump-requests",
         action="store_true",
-        help="Disable dumping the generated requests to a file.",
+        help="Enable dumping the generated requests to a file.",
     )
 
     args = parser.parse_args()
