@@ -483,14 +483,17 @@ class BenchmarkMetrics:
     median_ttft_ms: float
     std_ttft_ms: float
     p99_ttft_ms: float
+    p95_ttft_ms: float
     mean_tpot_ms: float
     median_tpot_ms: float
     std_tpot_ms: float
     p99_tpot_ms: float
+    p95_tpot_ms: float
     mean_itl_ms: float
     median_itl_ms: float
     std_itl_ms: float
     p99_itl_ms: float
+    p95_itl_ms: float
     mean_e2e_latency_ms: float
     median_e2e_latency_ms: float
 
@@ -813,14 +816,17 @@ def calculate_metrics(
         median_ttft_ms=np.median(ttfts or 0) * 1000,
         std_ttft_ms=np.std(ttfts or 0) * 1000,
         p99_ttft_ms=np.percentile(ttfts or 0, 99) * 1000,
+        p95_ttft_ms=np.percentile(ttfts or 0, 95) * 1000,
         mean_tpot_ms=np.mean(tpots or 0) * 1000,
         median_tpot_ms=np.median(tpots or 0) * 1000,
         std_tpot_ms=np.std(tpots or 0) * 1000,
         p99_tpot_ms=np.percentile(tpots or 0, 99) * 1000,
+        p95_tpot_ms=np.percentile(tpots or 0, 95) * 1000,
         mean_itl_ms=np.mean(itls or 0) * 1000,
         median_itl_ms=np.median(itls or 0) * 1000,
         std_itl_ms=np.std(itls or 0) * 1000,
         p99_itl_ms=np.percentile(itls or 0, 99) * 1000,
+        p95_itl_ms=np.percentile(itls or 0, 95) * 1000,
         mean_e2e_latency_ms=np.mean(e2e_latencies) * 1000,
         median_e2e_latency_ms=np.median(e2e_latencies) * 1000,
     )
@@ -956,41 +962,17 @@ async def benchmark(
     print("=" * 50)
 
     if (
-        metrics.median_ttft_ms is not None
-        and metrics.mean_itl_ms is not None
-        and metrics.output_throughput is not None
+        metrics.median_ttft_ms is None
+        or metrics.mean_itl_ms is None
+        or metrics.output_throughput is None
     ):
-        result = {
-            "backend": args.backend,
-            "dataset_name": args.dataset_name,
-            "request_rate": request_rate,
-            "total_input_tokens": metrics.total_input,
-            "total_output_tokens": metrics.total_output,
-            "total_output_tokens_retokenized": metrics.total_output_retokenized,
-            "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
-            "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
-            "median_ttft_ms": metrics.median_ttft_ms,
-            "median_itl_ms": metrics.median_itl_ms,
-            "output_throughput": metrics.output_throughput,
-            "sharegpt_output_len": args.sharegpt_output_len,
-            "random_input_len": args.random_input_len,
-            "random_output_len": args.random_output_len,
-            "random_range_ratio": args.random_range_ratio,
-            "duration": benchmark_duration,
-            "completed": metrics.completed,
-        }
-    else:
         print(f"Error running benchmark for request rate: {request_rate}")
         print("-" * 30)
 
-    # Determine output file name
-    output_file_name = os.path.join(args.output_path, "metrics.jsonl")
-
-    # Append results to a JSONL file
-    with open(output_file_name, "a") as file:
-        file.write(json.dumps(result) + "\n")
-
     result = {
+        "backend": args.backend,
+        "dataset_name": args.dataset_name,
+        "request_rate": request_rate,
         "duration": benchmark_duration,
         "completed": metrics.completed,
         "total_input_tokens": metrics.total_input,
@@ -1003,14 +985,17 @@ async def benchmark(
         "median_ttft_ms": metrics.median_ttft_ms,
         "std_ttft_ms": metrics.std_ttft_ms,
         "p99_ttft_ms": metrics.p99_ttft_ms,
+        "p95_ttft_ms": metrics.p95_ttft_ms,
         "mean_tpot_ms": metrics.mean_tpot_ms,
         "median_tpot_ms": metrics.median_tpot_ms,
         "std_tpot_ms": metrics.std_tpot_ms,
         "p99_tpot_ms": metrics.p99_tpot_ms,
+        "p95_tpot_ms": metrics.p95_tpot_ms,
         "mean_itl_ms": metrics.mean_itl_ms,
         "median_itl_ms": metrics.median_itl_ms,
         "std_itl_ms": metrics.std_itl_ms,
         "p99_itl_ms": metrics.p99_itl_ms,
+        "p95_itl_ms": metrics.p95_itl_ms,
         "input_lens": [output.prompt_len for output in outputs],
         "output_lens": output_lens,
         "ttfts": [output.ttft for output in outputs],
@@ -1020,6 +1005,14 @@ async def benchmark(
         "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
         "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
     }
+
+    # Determine output file name
+    output_file_name = os.path.join(args.output_path, "metrics.jsonl")
+
+    # Append results to a JSONL file
+    with open(output_file_name, "a") as file:
+        file.write(json.dumps(result, indent=4) + "\n")
+
     return result
 
 
