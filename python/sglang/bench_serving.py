@@ -949,16 +949,19 @@ async def benchmark(
     print("{:<40} {:<10.2f}".format("Mean TTFT (ms):", metrics.mean_ttft_ms))
     print("{:<40} {:<10.2f}".format("Median TTFT (ms):", metrics.median_ttft_ms))
     print("{:<40} {:<10.2f}".format("P99 TTFT (ms):", metrics.p99_ttft_ms))
+    print("{:<40} {:<10.2f}".format("P95 TTFT (ms):", metrics.p95_ttft_ms))
     print(
         "{s:{c}^{n}}".format(s="Time per Output Token (excl. 1st token)", n=50, c="-")
     )
     print("{:<40} {:<10.2f}".format("Mean TPOT (ms):", metrics.mean_tpot_ms))
     print("{:<40} {:<10.2f}".format("Median TPOT (ms):", metrics.median_tpot_ms))
     print("{:<40} {:<10.2f}".format("P99 TPOT (ms):", metrics.p99_tpot_ms))
+    print("{:<40} {:<10.2f}".format("P95 TPOT (ms):", metrics.p95_tpot_ms))
     print("{s:{c}^{n}}".format(s="Inter-token Latency", n=50, c="-"))
     print("{:<40} {:<10.2f}".format("Mean ITL (ms):", metrics.mean_itl_ms))
     print("{:<40} {:<10.2f}".format("Median ITL (ms):", metrics.median_itl_ms))
     print("{:<40} {:<10.2f}".format("P99 ITL (ms):", metrics.p99_itl_ms))
+    print("{:<40} {:<10.2f}".format("P95 ITL (ms):", metrics.p95_itl_ms))
     print("=" * 50)
 
     if (
@@ -981,6 +984,7 @@ async def benchmark(
         "request_throughput": metrics.request_throughput,
         "input_throughput": metrics.input_throughput,
         "output_throughput": metrics.output_throughput,
+        "total_throughput": metrics.total_throughput,
         "mean_ttft_ms": metrics.mean_ttft_ms,
         "median_ttft_ms": metrics.median_ttft_ms,
         "std_ttft_ms": metrics.std_ttft_ms,
@@ -996,12 +1000,6 @@ async def benchmark(
         "std_itl_ms": metrics.std_itl_ms,
         "p99_itl_ms": metrics.p99_itl_ms,
         "p95_itl_ms": metrics.p95_itl_ms,
-        "input_lens": [output.prompt_len for output in outputs],
-        "output_lens": output_lens,
-        "ttfts": [output.ttft for output in outputs],
-        "itls": [output.itl for output in outputs],
-        "generated_texts": [output.generated_text for output in outputs],
-        "errors": [output.error for output in outputs],
         "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
         "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
     }
@@ -1013,6 +1011,16 @@ async def benchmark(
     with open(output_file_name, "a") as file:
         file.write(json.dumps(result, indent=4) + "\n")
 
+    # Add detail to the result
+    detail = {
+        "input_lens": [output.prompt_len for output in outputs],
+        "output_lens": output_lens,
+        "ttfts": [output.ttft for output in outputs],
+        "itls": [output.itl for output in outputs],
+        "generated_texts": [output.generated_text for output in outputs],
+        "errors": [output.error for output in outputs],
+    }
+    result.update(detail)
     return result
 
 
