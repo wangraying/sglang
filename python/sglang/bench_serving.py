@@ -1154,7 +1154,12 @@ def run_benchmark(args_: argparse.Namespace):
     # Set output path
     if not args.output_path:
         now = datetime.now().strftime("%m%d%H%M%S")
-        args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_{args.num_prompts}"
+        if args.dataset_name == "generated-shared-prefix":
+            args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_{args.gen_num_groups}_{args.gen_prompts_per_group}"
+        elif args.dataset_name == "dumped":
+            args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_{args.num_prompts}-{args.dataset_path.split('/')[-2]}"
+        else:
+            args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_{args.num_prompts}"
         os.makedirs(args.output_path, exist_ok=True)
 
     print(f"{args}\n")
