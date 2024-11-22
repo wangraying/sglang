@@ -447,6 +447,9 @@ def get_dataset(args, tokenizer):
             output_len=args.gen_output_len,
             tokenizer=tokenizer,
         )
+    # support reading dataset from dumped json file
+    elif args.dataset_name == "dumped":
+        input_requests = load_dumped_requests(args.dataset_path)
     else:
         raise ValueError(f"Unknown dataset: {args.dataset_name}")
     return input_requests
@@ -727,6 +730,12 @@ def sample_generated_shared_prefix_requests(
     return input_requests
 
 
+def load_dumped_requests(dataset_path: str) -> List[Tuple[str, int, int]]:
+    with open(dataset_path) as f:
+        dataset = json.load(f)
+    return dataset
+
+
 async def get_request(
     input_requests: List[Tuple[str, int, int]],
     request_rate: float,
@@ -975,14 +984,7 @@ async def benchmark(
         print("-" * 30)
 
     # Determine output file name
-    if args.output_file:
-        output_file_name = args.output_file
-    else:
-        now = datetime.now().strftime("%m%d")
-        if args.dataset_name == "random":
-            output_file_name = f"{args.backend}_{now}_{args.num_prompts}_{args.random_input_len}_{args.random_output_len}.jsonl"
-        else:
-            output_file_name = f"{args.backend}_{now}_{args.num_prompts}_sharegpt.jsonl"
+    output_file_name = os.path.join(args.output_path, "metrics.jsonl")
 
     # Append results to a JSONL file
     with open(output_file_name, "a") as file:
@@ -1129,7 +1131,15 @@ def run_benchmark(args_: argparse.Namespace):
             "Because when the tokenizer counts the output tokens, if there is gibberish, it might count incorrectly.\n"
         )
 
+    # set output path
+    if not args.output_path:
+        now = datetime.now().strftime("%m%d%H%M%S")
+        args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_{args.num_prompts}"
+        os.makedirs(args.output_path, exist_ok=True)
+
     print(f"{args}\n")
+    with open(f"{args.output_path}/experiment_config.json", "w") as f:
+        json.dump(vars(args), f, indent=4)
 
     # Read dataset
     backend = args.backend
@@ -1139,6 +1149,10 @@ def run_benchmark(args_: argparse.Namespace):
     tokenizer = get_tokenizer(tokenizer_id)
 
     input_requests = get_dataset(args, tokenizer)
+
+    if not args.disable_dump_requests:
+        with open(f"{args.output_path}/dumped_requests.json", "w") as f:
+            json.dump(input_requests, f)
 
     if not args.multi:
         return asyncio.run(
@@ -1210,7 +1224,7 @@ if __name__ == "__main__":
         "--dataset-name",
         type=str,
         default="sharegpt",
-        choices=["sharegpt", "random", "generated-shared-prefix"],
+        choices=["sharegpt", "random", "generated-shared-prefix", "dumped"],
         help="Name of the dataset to benchmark on.",
     )
     parser.add_argument(
@@ -1276,7 +1290,7 @@ if __name__ == "__main__":
         default="2,34,2",
         help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a list of request rates, requiring the parameters to not equal three.",
     )
-    parser.add_argument("--output-file", type=str, help="Output JSONL file name.")
+    parser.add_argument("--output-path", type=str, help="Output path.")
     parser.add_argument(
         "--disable-tqdm",
         action="store_true",
@@ -1330,6 +1344,11 @@ if __name__ == "__main__":
         type=int,
         default=256,
         help="Target length in tokens for outputs in generated-shared-prefix dataset",
+    )
+    group.add_argument(
+        "--disable-dump-requests",
+        action="store_true",
+        help="Disable dumping the generated requests to a file.",
     )
 
     args = parser.parse_args()
