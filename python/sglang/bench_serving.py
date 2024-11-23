@@ -474,6 +474,41 @@ def get_server_args(args):
     return server_args
 
 
+def flush_server_cache(args):
+    if args.backend == "sglang":
+        server_url = (
+            f"{args.base_url}/flush_cache"
+            if args.base_url
+            else f"http://{args.host}:{args.port}/flush_cache"
+        )
+
+        try:
+            response = requests.post(server_url)
+            response.raise_for_status()
+            print("Server cache flushed.")
+        except Exception as e:
+            print(f"Failed to flush server cache from {server_url}. Error: {e}")
+
+
+def get_server_cache_stat(args):
+    cache_stat = {}
+    if args.backend == "sglang":
+        server_url = (
+            f"{args.base_url}/get_cache_stat"
+            if args.base_url
+            else f"http://{args.host}:{args.port}/get_cache_stat"
+        )
+
+        try:
+            response = requests.get(server_url)
+            response.raise_for_status()
+            cache_stat = response.json()
+        except Exception as e:
+            print(f"Failed to get server cache stat from {server_url}. Error: {e}")
+
+    return cache_stat
+
+
 ASYNC_REQUEST_FUNCS = {
     "sglang": async_request_sglang_generate,
     "sglang-native": async_request_sglang_generate,
@@ -990,6 +1025,13 @@ async def benchmark(
     ):
         print(f"Error running benchmark for request rate: {request_rate}")
         print("-" * 30)
+  
+    cache_stat = get_server_cache_stat(args)
+    if cache_stat:
+        print("{s:{c}^{n}}".format(s="Cache Stat", n=50, c="-"))
+        print("{:<40} {:<10}".format("Total size:", cache_stat["total_size"]))
+        print("{:<40} {:<10}".format("Evictable size:", cache_stat["evictable_size"]))
+        print("{:<40} {:<10.2f}".format("Hit rate (%):", cache_stat["cache_hit_rate"] * 100))
 
     result = {
         "backend": args.backend,
@@ -1021,6 +1063,9 @@ async def benchmark(
         "p95_itl_ms": metrics.p95_itl_ms,
         "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
         "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
+        "total_cache_size": cache_stat.get("total_size", 0),
+        "evictable_cache_size": cache_stat.get("evictable_size", 0),
+        "cache_hit_rate": cache_stat.get("cache_hit_rate", 0),
     }
 
     # Determine output file name
@@ -1040,6 +1085,7 @@ async def benchmark(
         "errors": [output.error for output in outputs],
     }
     result.update(detail)
+
     return result
 
 
@@ -1166,10 +1212,18 @@ def run_benchmark(args_: argparse.Namespace):
 
     # Save experiment config
     server_args = get_server_args(args)
-    print(f"Server args: {server_args}")
+    print(f"Server args: {server_args}\n")
     with open(f"{args.output_path}/experiment_config.json", "w") as f:
         f.write(json.dumps(server_args, indent=4) + "\n")
         f.write(json.dumps(vars(args), indent=4) + "\n")
+
+    # Flush cache before benchmarking
+    if not args.disable_flush_cache:
+        flush_server_cache(args)
+
+    # Get Cache Stat
+    cache_stat = get_server_cache_stat(args)
+    print(f"Inital cache stat: {cache_stat}")
 
     # Read dataset
     backend = args.backend
@@ -1379,6 +1433,11 @@ if __name__ == "__main__":
         "--enable-dump-requests",
         action="store_true",
         help="Enable dumping the generated requests to a file.",
+    )
+    group.add_argument(
+        "--disable-flush-cache",
+        action="store_true",
+        help="Disable flushing the cache before benchmarking.",
     )
 
     args = parser.parse_args()
