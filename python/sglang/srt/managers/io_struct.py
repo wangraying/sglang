@@ -357,3 +357,13 @@ class GetMemPoolSizeReq:
 @dataclass
 class GetMemPoolSizeReqOutput:
     size: int
+
+@dataclass
+class GetCacheStatReq:
+    pass
+
+@dataclass
+class GetCacheStatReqOutput:
+    total_size: int
+    evictable_size: int
+    cache_hit_rate: float

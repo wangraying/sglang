@@ -45,6 +45,8 @@ from sglang.srt.managers.io_struct import (
     EmbeddingReqInput,
     FlushCacheReq,
     GenerateReqInput,
+    GetCacheStatReq,
+    GetCacheStatReqOutput,
     GetMemPoolSizeReq,
     GetMemPoolSizeReqOutput,
     ProfileReq,
@@ -386,6 +388,17 @@ class TokenizerManager:
         req = ProfileReq.STOP_PROFILE
         self.send_to_scheduler.send_pyobj(req)
 
+    async def get_cache_stat(self):
+        if self.to_create_loop:
+            self.create_handle_loop()
+
+        req = GetCacheStatReq()
+        self.send_to_scheduler.send_pyobj(req)
+
+        self.cache_status = asyncio.Future()
+        res = await self.cache_status
+        return res
+
     async def get_memory_pool_size(self):
         if self.to_create_loop:
             self.create_handle_loop()
@@ -520,6 +533,9 @@ class TokenizerManager:
                     # set future if the all results are received
                     if len(self.mem_pool_size_tmp) == self.server_args.dp_size:
                         self.mem_pool_size.set_result(self.mem_pool_size_tmp)
+                continue
+            elif isinstance(recv_obj, GetCacheStatReqOutput):
+                self.cache_status.set_result(recv_obj)
                 continue
 
             assert isinstance(

@@ -184,6 +184,18 @@ async def stop_profile():
     )
 
 
+@app.get("/get_cache_stat")
+async def get_cache_stat():
+    """Get the cache status."""
+    try:
+        ret = await tokenizer_manager.get_cache_stat()
+        return ret
+    except Exception as e:
+        return ORJSONResponse(
+            {"error": {"message": str(e)}}, status_code=HTTPStatus.BAD_REQUEST
+        )
+
+
 @app.api_route("/get_memory_pool_size", methods=["GET", "POST"])
 async def get_memory_pool_size():
     """Get the memory pool size in number of tokens"""

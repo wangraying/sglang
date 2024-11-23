@@ -37,6 +37,8 @@ from sglang.srt.managers.io_struct import (
     BatchEmbeddingOut,
     BatchTokenIDOut,
     FlushCacheReq,
+    GetCacheStatReq,
+    GetCacheStatReqOutput,
     GetMemPoolSizeReq,
     GetMemPoolSizeReqOutput,
     ProfileReq,
@@ -436,6 +438,22 @@ class Scheduler:
             elif isinstance(recv_req, GetMemPoolSizeReq):
                 self.send_to_tokenizer.send_pyobj(
                     GetMemPoolSizeReqOutput(self.max_total_num_tokens)
+                )
+            elif isinstance(recv_req, GetCacheStatReq):
+                if self.tree_cache_metrics['total'] > 0:
+                    tree_cache_hit_rate = (
+                        self.tree_cache_metrics["hit"]
+                        / self.tree_cache_metrics["total"]
+                    )
+                else:
+                    tree_cache_hit_rate = 0.0
+
+                self.send_to_tokenizer.send_pyobj(
+                    GetCacheStatReqOutput(
+                        self.tree_cache.total_size(),
+                        self.tree_cache.evictable_size(),
+                        tree_cache_hit_rate
+                    )
                 )
             else:
                 raise ValueError(f"Invalid request: {recv_req}")
