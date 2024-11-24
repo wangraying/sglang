@@ -50,6 +50,7 @@ from sglang.srt.managers.io_struct import (
     GetMemPoolSizeReq,
     GetMemPoolSizeReqOutput,
     ProfileReq,
+    SetTuneableParamsReqInput,
     TokenizedEmbeddingReqInput,
     TokenizedGenerateReqInput,
     UpdateWeightReqInput,
@@ -387,6 +388,9 @@ class TokenizerManager:
     def stop_profile(self):
         req = ProfileReq.STOP_PROFILE
         self.send_to_scheduler.send_pyobj(req)
+
+    def set_tunnable_params(self, obj: SetTuneableParamsReqInput):
+        self.send_to_scheduler.send_pyobj(obj)
 
     async def get_cache_stat(self):
         if self.to_create_loop:

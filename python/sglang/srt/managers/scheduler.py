@@ -42,6 +42,7 @@ from sglang.srt.managers.io_struct import (
     GetMemPoolSizeReq,
     GetMemPoolSizeReqOutput,
     ProfileReq,
+    SetTuneableParamsReqInput,
     TokenizedEmbeddingReqInput,
     TokenizedGenerateReqInput,
     UpdateWeightReqInput,
@@ -455,6 +456,8 @@ class Scheduler:
                         tree_cache_hit_rate
                     )
                 )
+            elif isinstance(recv_req, SetTuneableParamsReqInput):
+                self.set_tuneable_params(recv_req)
             else:
                 raise ValueError(f"Invalid request: {recv_req}")
 
@@ -1252,6 +1255,42 @@ class Scheduler:
         )
         logger.info("Profiler is done")
 
+    def set_tuneable_params(self, recv_req: SetTuneableParamsReqInput):
+        """Set tuneable parameters."""
+
+        # set schedule policy
+        self.schedule_policy = recv_req.schedule_policy
+        self.policy = SchedulePolicy(self.schedule_policy, self.tree_cache)
+
+        # set chunked prefill
+        self.chunked_prefill_size = recv_req.chunked_prefill_size
+        self.being_chunked_req = None
+        self.is_mixed_chunk = (
+            self.chunked_prefill_size is not None and recv_req.enable_mixed_chunk
+        )
+
+        # reset new token estimation
+        if recv_req.schedule_conservativeness is not None:
+            assert (
+                recv_req.schedule_conservativeness >= 0
+            ), "Invalid schedule_conservativeness"
+ 
+            self.init_new_token_ratio = min(
+                global_config.default_init_new_token_ratio
+                * recv_req.schedule_conservativeness,
+                1.0,
+            )
+            self.min_new_token_ratio = min(
+                self.init_new_token_ratio
+                * global_config.default_min_new_token_ratio_factor,
+                1.0,
+            )
+            self.new_token_ratio_decay = (
+                self.init_new_token_ratio - self.min_new_token_ratio
+            ) / global_config.default_new_token_ratio_decay_steps
+            self.new_token_ratio = self.init_new_token_ratio
+
+        logger.info(f"Set tuneable params: {recv_req}")
 
 def run_scheduler_process(
     server_args: ServerArgs,

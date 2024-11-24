@@ -52,6 +52,7 @@ from sglang.srt.managers.detokenizer_manager import run_detokenizer_process
 from sglang.srt.managers.io_struct import (
     EmbeddingReqInput,
     GenerateReqInput,
+    SetTuneableParamsReqInput,
     UpdateWeightReqInput,
 )
 from sglang.srt.managers.scheduler import run_scheduler_process
@@ -183,6 +184,14 @@ async def stop_profile():
         status_code=200,
     )
 
+@app.post("/set_tunnable_params")
+async def set_tunnable_params(obj: SetTuneableParamsReqInput):
+    """Set the tunnable parameters."""
+    tokenizer_manager.set_tunnable_params(obj)
+    return Response(
+        content="Set tunnable parameters.\n",
+        status_code=200,
+    )
 
 @app.get("/get_cache_stat")
 async def get_cache_stat():

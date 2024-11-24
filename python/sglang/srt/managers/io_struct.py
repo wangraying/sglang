@@ -367,3 +367,10 @@ class GetCacheStatReqOutput:
     total_size: int
     evictable_size: int
     cache_hit_rate: float
+
+@dataclass
+class SetTuneableParamsReqInput:
+    schedule_policy: str
+    chunked_prefill_size: int
+    enable_mixed_chunk: bool
+    schedule_conservativeness: float
