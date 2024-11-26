@@ -45,13 +45,13 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 4. The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
 
 <p align="center">
-<img src="https://github.com/wangraying/sglang/blob/v0.3.5.post2-dev/docs/images/output-throughput-vs-schedule-policy.png?raw=true" alt="Output Throughput"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-schedule-policy.png" alt="Output Throughput" style="width:60%; height:auto;"/>
 </p>
 
 <p align="center">
-<img src="https://github.com/wangraying/sglang/blob/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy.png?raw=true" alt="P99 TTFT Latency"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy.png" alt="P99 TTFT Latency" style="width:60%; height:auto;"/>
 </p>
 
 <p align="center">
-<img src="https://github.com/wangraying/sglang/blob/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png?raw=true" alt="P99 ITL Latency"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:60%; height:auto;"/>
 </p>
