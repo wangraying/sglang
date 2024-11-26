@@ -2,7 +2,7 @@
 Set tunable parameters for the server.
 
 Usage:
-python3 -m sglang.tune_server --url http://localhost:30000 --schedule-policy lpm --chunked-prefill-size 512 --enable-mixed-chunk --schedule_conservativeness 1.0
+python3 -m sglang.tune_server --url http://localhost:30000 --schedule-policy lpm --chunked-prefill-size 512 --enable-mixed-chunk --schedule-conservativeness 1.0
 """
 
 import argparse

@@ -10,7 +10,6 @@ python3 -m sglang.bench_serving --backend sglang --num-prompt 10
 python3 -m sglang.bench_serving --backend sglang --dataset-name random --num-prompts 3000 --random-input 1024 --random-output 1024 --random-range-ratio 0.5
 python3 -m sglang.bench_serving --backend sglang --dataset-name random --request-rate-range 1,2,4,8,16,32 --random-input 4096 --random-output 1024 --random-range-ratio 0.125 --multi
 """
-
 import argparse
 import asyncio
 import json
@@ -1025,7 +1024,7 @@ async def benchmark(
     ):
         print(f"Error running benchmark for request rate: {request_rate}")
         print("-" * 30)
-  
+
     cache_stat = get_server_cache_stat(args)
     if cache_stat:
         print("{s:{c}^{n}}".format(s="Cache Stat", n=50, c="-"))
@@ -1213,9 +1212,10 @@ def run_benchmark(args_: argparse.Namespace):
     # Save experiment config
     server_args = get_server_args(args)
     print(f"Server args: {server_args}\n")
-    with open(f"{args.output_path}/experiment_config.json", "w") as f:
-        f.write(json.dumps(server_args, indent=4) + "\n")
-        f.write(json.dumps(vars(args), indent=4) + "\n")
+    with open(f"{args.output_path}/experiment_config_v2.json", "w") as f:
+        # f.write(json.dumps(server_args, indent=4) + "\n")
+        # f.write(json.dumps(vars(args), indent=4) + "\n")
+        f.write(json.dumps([server_args, vars(args)], indent=4) + "\n")
 
     # Flush cache before benchmarking
     if not args.disable_flush_cache:
