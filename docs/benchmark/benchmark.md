@@ -58,6 +58,18 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 
 ## Performance Metrics for Different Chunk Sizes
 
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughpt-vs-chunk-size.png" alt="Output Throughput" style="width:60%; height:auto;"/>
+</p>
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:60%; height:auto;"/>
+</p>
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-vs-chunk-size.png" alt="P99 ITL Latency" style="width:60%; height:auto;"/>
+</p>
+
 *Notes:*
 1. The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
 2. The feature for mixed-running is enabled.
