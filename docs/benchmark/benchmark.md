@@ -44,26 +44,25 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 3. The data collected in this figure are conducted on *Random-2000* dataset.
 4. The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
 
+**Output Throughput:**
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-schedule-policy.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
+**TTFT Latency:**
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
-</p>
-
-To have a better visualization, normalize the latency using the first value of each group.
+To have a better visualization, normalize TTFT latency using the first value of each group.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
+**ITL Latency:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy-normalized.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
 
 **Observations:**
@@ -73,21 +72,37 @@ To have a better visualization, normalize the latency using the first value of e
 
 ## Performance Metrics for Different Chunk Sizes
 
+### Experiment Settings
+- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
+- Vary the prefilled chunk size among 256, 512, 1024 and 2048, with mixed chunks enabled.
+- Use default values for others.
+
+### LPM Policy
+
+**Output Throughput:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughpt-vs-chunk-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-output-throughpt-vs-chunk-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
+**TTFT Latency:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
+To have a better visualization, normalize TTFT latency using the first value of each group.
+
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-vs-chunk-size.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-ttft-vs-chunk-size-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
-*Notes:*
-1. The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
-2. The feature for mixed-running is enabled.
+**ITL Latency:**
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-itl-vs-chunk-size.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+</p>
+
+*Note*:
+1. datapoints for the default setting of`chunked_prefill_size,enable_mixed_chunk=(8192,False)` are added for better comparison.
 
 ## Cache Behaviors
 
