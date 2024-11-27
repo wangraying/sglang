@@ -66,6 +66,10 @@ To have a better visualization, normalize the latency using the first value of e
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy-normalized.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
 
+**Observations:**
+1. Random policy almost always performs the worst across all datasets, in terms of output throughput and TTFT
+2. FCFS and LPM outperform the others across all the datasets, in terms of output throughput and TTFT.
+2. By comparing the results of random-n datasets, we could observe a trend of increasing TTFT but decresing ITL for longer sequences, when considering FCFS, LOF and LPM.
 
 ## Performance Metrics for Different Chunk Sizes
 
