@@ -56,6 +56,17 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
 
+To have a better visualization, normalize the latency using the first value of each group.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
+</p>
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy-normalized.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+</p>
+
+
 ## Performance Metrics for Different Chunk Sizes
 
 <p align="center">
