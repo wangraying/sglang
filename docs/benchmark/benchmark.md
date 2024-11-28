@@ -84,6 +84,9 @@ To have a better visualization, normalize TTFT latency using the first value of 
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-output-throughpt-vs-chunk-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
+*Note*:
+1. datapoints of `chunked_prefill_size,enable_mixed_chunk=(8192,False)`, which is the default setting, are added for better comparison.
+
 **TTFT Latency:**
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
@@ -101,8 +104,29 @@ To have a better visualization, normalize TTFT latency using the first value of 
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-itl-vs-chunk-size.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
 
-*Note*:
-1. datapoints for the default setting of`chunked_prefill_size,enable_mixed_chunk=(8192,False)` are added for better comparison.
+### FCFS Policy
+
+**Output Throughput:**
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-output-throughpt-vs-chunk-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+</p>
+
+**TTFT Latency:**
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
+</p>
+
+To have a better visualization, normalize TTFT latency using the first value of each group.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-ttft-vs-chunk-size-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
+</p>
+
+**ITL Latency:**
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-itl-vs-chunk-size.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+</p>
 
 ## Cache Behaviors
 
