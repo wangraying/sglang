@@ -28,6 +28,16 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 
 ## Performance Metrics for Different Scheduling Policies
 
+### Experiment Settings
+- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
+- The prefilled chunk size is fixed to 8192 as default, and mixed chunks is not enabled.
+- Use default values for others.
+
+### Performance Metrics
+<p style="text-align: center;">
+<em>Table: Performance Metrics collected on Random-2000 dataset.</em>
+</p>
+
 | Scheduling Policy | Request Throughput (req/s) | Output Token Throughput (tok/s) | Mean End-to-End Latency (ms) | Mean TTFT (ms) | TP95 TTFT (ms) | TP99 TTFT (ms) | Mean ITL (ms) | TP95 ITL (ms) | TP99 ITL (ms) |
 | ------------------|----------------------------|---------------------------------|------------------------------|----------------|----------------|----------------|---------------|---------------|---------------|
 | LPM               | 4.2                        | 844.0                           | 267208.8                     | 255247.3       | 487127.6       | 511899.5       | 60.3          | 30.7          | 188.1         |
@@ -41,8 +51,6 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 *Notes:*
 1. "TTFT" stands for "Time to First Token". When the radix cache is disabled, the LPM and DFS-Weight policies perform equivalently to the Random policy.
 2. "ITL" stands for "Inter-Token Latency".
-3. The data collected in this figure are conducted on *Random-2000* dataset.
-4. The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
 
 **Output Throughput:**
 <p align="center">
@@ -54,7 +62,7 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
-To have a better visualization, normalize TTFT latency using the first value of each group.
+For better visualization, normalize TTFT latency using the first value of each group.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
@@ -70,11 +78,52 @@ To have a better visualization, normalize TTFT latency using the first value of 
 2. FCFS and LPM outperform the others across all the datasets, in terms of output throughput and TTFT.
 2. By comparing the results of random-n datasets, we could observe a trend of increasing TTFT but decresing ITL for longer sequences, when considering FCFS, LOF and LPM.
 
-## Performance Metrics for Different Chunk Sizes
+## Cache Behaviors
+
+### Performance Metrics With and Without Radix Cache
 
 ### Experiment Settings
-- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
-- Vary the prefilled chunk size among 256, 512, 1024 and 2048, with mixed chunks enabled.
+- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
+- The prefilled chunk size is fixed to 8192 as default, and mixed chunks is not enabled.
+- Use default values for others.
+- When radix cache is disabled, the LPM and DFS-Weight policies are equivalent to the FCFS policy. Therefore, we only compare the FCFS, LOF and Random policies in this experiment.
+
+**Output Throughput:**
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+</p>
+
+**TTFT Latency:**
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
+</p>
+
+For better visualization, normalize TTFT latency using the first value of each group.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
+</p>
+
+**ITL Latency:**
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+</p>
+
+**Observations:**
+1. For generated-shared-prefix dataset, enabling radix cache can significantly improve output throughput and decrease TTFT latency,
+at the cost of increasing ITL latency, due to cache operations.
+2. For other datasets, enabling cache may not result in obvious performance gains.
+Usually, it could lead to more overhead, resulting in a slightly higher TTFT and reduced output throughput.
+The only exception is the random-4000 dataset, which could see a small 1% improvement in some cases.
+
+### Performance Metrics With Varying Cache Sizes
+
+
+## Performance Metrics for Varying Chunk Sizes
+
+### Experiment Settings
+- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
+- Vary the prefilled chunk sizes among 256, 512, 1024 and 2048, with mixed chunks enabled.
 - Use default values for others.
 
 ### LPM Policy
@@ -92,7 +141,7 @@ To have a better visualization, normalize TTFT latency using the first value of 
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
-To have a better visualization, normalize TTFT latency using the first value of each group.
+For better visualization, normalize TTFT latency using the first value of each group.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/lpm-p99-ttft-vs-chunk-size-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
@@ -116,7 +165,7 @@ To have a better visualization, normalize TTFT latency using the first value of 
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-ttft-vs-chunk-size.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
 </p>
 
-To have a better visualization, normalize TTFT latency using the first value of each group.
+For better visualization, normalize TTFT latency using the first value of each group.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-ttft-vs-chunk-size-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
@@ -127,40 +176,3 @@ To have a better visualization, normalize TTFT latency using the first value of 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-itl-vs-chunk-size.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
-
-## Cache Behaviors
-
-### Performance Metrics With and Without Radix Cache
-
-### Experiment Settings
-- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
-- The prefilled chunk size is set to default 8192, and mixed chunks is not enabled.
-- Use default values for others.
-
-**Output Throughput:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache.png" alt="Output Throughput" style="width:80%; height:auto;"/>
-</p>
-
-**TTFT Latency:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
-</p>
-
-To have a better visualization, normalize TTFT latency using the first value of each group.
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
-</p>
-
-**ITL Latency:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
-</p>
-
-**Observations:**
-1. For generated-shared-prefix dataset, enabling radix cache can significantly improve output throughput and decrease TTFT latency,
-at the cost of increasing ITL latency, due to cache operations.
-2. For other datasets, enabling cache may not result in obvious performance gains.
-Usually, it could lead to more overhead, resulting in a slightly higher TTFT and reduced output throughput.
-The only exception is the random-4000 dataset, which may see a small 1% improvement in some cases.
