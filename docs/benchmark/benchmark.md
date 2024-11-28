@@ -132,6 +132,11 @@ To have a better visualization, normalize TTFT latency using the first value of 
 
 ### Performance Metrics With and Without Radix Cache
 
+### Experiment Settings
+- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed to 16.
+- The prefilled chunk size is set to default 8192, and mixed chunks is not enabled.
+- Use default values for others.
+
 **Output Throughput:**
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache.png" alt="Output Throughput" style="width:80%; height:auto;"/>
@@ -152,3 +157,10 @@ To have a better visualization, normalize TTFT latency using the first value of 
 <p align="center">
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
+
+**Observations:**
+1. For generated-shared-prefix dataset, enabling radix cache can significantly improve output throughput and decrease TTFT latency,
+at the cost of increasing ITL latency, due to cache operations.
+2. For other datasets, enabling cache may not result in obvious performance gains.
+Usually, it could lead to more overhead, resulting in a slightly higher TTFT and reduced output throughput.
+The only exception is the random-4000 dataset, which may see a small 1% improvement in some cases.
