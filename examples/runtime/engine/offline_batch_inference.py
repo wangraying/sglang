@@ -1,4 +1,6 @@
+import dataclasses
 import sglang as sgl
+from sglang.srt.server_args import ServerArgs
 
 
 def main():
@@ -17,7 +19,14 @@ def main():
     sampling_params = {"temperature": 0.8, "top_p": 0.95, "max_new_tokens": 5}
 
     # Create an LLM.
-    llm = sgl.Engine(model_path="meta-llama/Meta-Llama-3.1-8B-Instruct")
+    server_args = ServerArgs(
+        model_path="meta-llama/Meta-Llama-3.1-8B-Instruct",
+        schedule_policy="fcfs",
+        chunked_prefill_size=4,
+        enable_mixed_chunk=True,
+        disable_radix_cache=True,
+    )
+    llm = sgl.Engine(**dataclasses.asdict(server_args))
 
     outputs = llm.generate(prompts, sampling_params)
     # Print the outputs.

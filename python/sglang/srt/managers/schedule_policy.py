@@ -290,6 +290,7 @@ class PrefillAdder:
         input_tokens = req.extend_input_len
         prefix_len = len(req.prefix_indices)
 
+        logger.debug(f"Add req {req.rid}, total_tokens: {total_tokens}, rem_total_tokens: {self.rem_total_tokens}, rem_chunk_tokens: {self.rem_chunk_tokens}, can_run_list: {len(self.can_run_list)}")
         if total_tokens >= self.rem_total_tokens:
             return AddReqResult.NO_TOKEN
 
@@ -297,10 +298,8 @@ class PrefillAdder:
             return AddReqResult.OTHER
 
         with self._lock_node(req.last_node):
-            logger.debug(f"Add req, total_tokens: {total_tokens}, rem_total_tokens: {self.rem_total_tokens}")
             if total_tokens > self.rem_total_tokens:
                 return AddReqResult.NO_TOKEN
-
             if (
                 self.rem_chunk_tokens is None
                 or input_tokens <= self.rem_chunk_tokens
