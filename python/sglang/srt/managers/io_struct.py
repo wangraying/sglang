@@ -200,6 +200,9 @@ class TokenizedGenerateReqInput:
     # LoRA related
     lora_path: Optional[str] = None  # None means just use the base model
 
+    def __str__(self):
+        return f"TokenizedGenerateReqInput(rid={self.rid}, input_ids={self.input_ids}, return_logprob={self.return_logprob}, logprob_start_len={self.logprob_start_len}, top_logprobs_num={self.top_logprobs_num}, stream={self.stream}, lora_path={self.lora_path})"
+
 
 @dataclass
 class EmbeddingReqInput:

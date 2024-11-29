@@ -15,6 +15,7 @@ limitations under the License.
 
 """Request scheduler policy"""
 
+import logging
 import os
 import random
 from collections import defaultdict
@@ -33,6 +34,9 @@ from sglang.srt.mem_cache.radix_cache import TreeNode
 CLIP_MAX_NEW_TOKENS_ESTIMATION = int(
     os.environ.get("SGLANG_CLIP_MAX_NEW_TOKENS_ESTIMATION", "4096")
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class SchedulePolicy:
@@ -150,16 +154,13 @@ class PrefillAdder:
 
         if running_batch is not None:
             # Pre-remove the tokens which will be occupied by the running requests
-            self.rem_total_tokens -= sum(
-                [
-                    min(
+            for r in running_batch.reqs:
+                self.rem_total_tokens -=  min(
                         (r.sampling_params.max_new_tokens - len(r.output_ids)),
                         CLIP_MAX_NEW_TOKENS_ESTIMATION,
-                    )
-                    * self.new_token_ratio
-                    for r in running_batch.reqs
-                ]
-            )
+                    ) * self.new_token_ratio
+
+        logger.debug(f"PrefillAdder init, rem_total_tokens: {self.rem_total_tokens}, rem_input_tokens: {self.rem_input_tokens}, rem_chunk_tokens: {self.rem_chunk_tokens}, new_token_ratio: {self.new_token_ratio}")
 
     def budget_state(self):
         if self.rem_total_tokens <= 0 or self.cur_rem_tokens <= 0:
@@ -296,6 +297,7 @@ class PrefillAdder:
             return AddReqResult.OTHER
 
         with self._lock_node(req.last_node):
+            logger.debug(f"Add req, total_tokens: {total_tokens}, rem_total_tokens: {self.rem_total_tokens}")
             if total_tokens > self.rem_total_tokens:
                 return AddReqResult.NO_TOKEN
 

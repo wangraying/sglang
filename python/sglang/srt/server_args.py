@@ -68,7 +68,7 @@ class ServerArgs:
     stream_interval: int = 1
     random_seed: Optional[int] = None
     constrained_json_whitespace_pattern: Optional[str] = None
-    watchdog_timeout: float = 300
+    watchdog_timeout: float = 6000
     download_dir: Optional[str] = None
 
     # Logging
