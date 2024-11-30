@@ -13,7 +13,7 @@ def main():
         # "I love you",
         # "Beijing is the capital of",
         "The capital of China is",
-        "Welcome to New"
+        "Welcome to New",
     ]
     # Create a sampling params object.
     sampling_params = {"temperature": 0.8, "top_p": 0.95, "max_new_tokens": 5}
