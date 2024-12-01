@@ -557,7 +557,7 @@ class Scheduler:
 
         self.waiting_queue.append(req)
 
-    def log_prefill_stats(self, adder, can_run_list, running_bs, has_inflight):
+    def log_prefill_stats(self, adder, can_run_list, running_bs, has_being_chunked):
         if isinstance(self.tree_cache, RadixCache):
             self.tree_cache_metrics["total"] += (
                 adder.log_input_tokens + adder.log_hit_tokens
@@ -581,14 +581,14 @@ class Scheduler:
             f"cache hit rate: {100.0 * tree_cache_hit_rate:.2f}%, "
             f"token usage: {num_used / self.max_total_num_tokens:.2f}, "
             f"#running-req: {running_bs}, "
-            f"#queue-req: {len(self.waiting_queue) + has_inflight}"
+            f"#queue-req: {len(self.waiting_queue) + has_being_chunked}"
         )
 
         if self.enable_metrics:
             self.stats.num_running_reqs = running_bs
             self.stats.num_used_tokens = num_used
             self.stats.token_usage = round(num_used / self.max_total_num_tokens, 2)
-            self.stats.num_queue_reqs = len(self.waiting_queue) + has_inflight
+            self.stats.num_queue_reqs = len(self.waiting_queue) + has_being_chunked
             self.stats.cache_hit_rate = tree_cache_hit_rate
             self.metrics_collector.log_stats(self.stats)
 
@@ -650,7 +650,7 @@ class Scheduler:
             if self.being_chunked_req:
                 self.last_batch.filter_batch(being_chunked_req=self.being_chunked_req)
                 self.tree_cache.cache_unfinished_req(self.being_chunked_req)
-                # Inflight request keeps its rid but will get a new req_pool_idx.
+                # being chunked request keeps its rid but will get a new req_pool_idx
                 self.req_to_token_pool.free(self.being_chunked_req.req_pool_idx)
                 self.batch_is_full = False
 
@@ -716,11 +716,11 @@ class Scheduler:
             running_bs if self.is_mixed_chunk else 0,
         )
 
-        has_inflight = self.being_chunked_req is not None
-        if has_inflight:
+        has_being_chunked = self.being_chunked_req is not None
+        if has_being_chunked:
             inflight_req = self.being_chunked_req
             self.being_chunked_req.init_next_round_input()
-            self.being_chunked_req = adder.add_inflight_req(self.being_chunked_req)
+            self.being_chunked_req = adder.add_being_chunked_req(self.being_chunked_req)
             logger.debug(f"Update being chunked request: {inflight_req.rid} to {self.being_chunked_req.rid if self.being_chunked_req else None}")
 
         if self.lora_paths:
@@ -764,12 +764,10 @@ class Scheduler:
             x for x in self.waiting_queue if x not in set(can_run_list)
         ]
 
-        if adder.new_inflight_req is not None:
+        if adder.new_being_chunked_req is not None:
             logger.debug(f"Adding new inflight request: {adder.new_inflight_req.rid}, current being chunked request: {self.being_chunked_req.rid if self.being_chunked_req else None}")
-            # assert self.being_chunked_req is None
-            if self.being_chunked_req is not None:
-                logger.error(f"Being chunked request is not None!")
-            self.being_chunked_req = adder.new_inflight_req
+            assert self.being_chunked_req is None
+            self.being_chunked_req = adder.new_being_chunked_req
 
         if self.being_chunked_req:
             self.being_chunked_req.is_being_chunked += 1
@@ -777,7 +775,7 @@ class Scheduler:
 
         # Print stats
         if self.tp_rank == 0:
-            self.log_prefill_stats(adder, can_run_list, running_bs, has_inflight)
+            self.log_prefill_stats(adder, can_run_list, running_bs, has_being_chunked)
 
         # Create a new batch
         new_batch = ScheduleBatch.init_new(
@@ -935,6 +933,7 @@ class Scheduler:
                             i, req, logprob_pt, next_token_ids, logits_output
                         )
                 else:
+                    # being chunked reqs' prefill is not finished
                     req.is_being_chunked -= 1
                     logger.debug(f"Update request: {req.rid}, is_being_chunked = {req.is_being_chunked}")
 
