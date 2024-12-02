@@ -516,7 +516,7 @@ class ScheduleBatch:
 
         if out_cache_loc is None:
             if self.tree_cache is not None:
-                # logger.debug(f"Allocation failed, evicting {num_tokens} tokens")
+                logger.debug(f"Allocation failed, evicting {num_tokens} tokens")
                 self.tree_cache.evict(num_tokens, self.token_to_kv_pool.free)
                 out_cache_loc = self.token_to_kv_pool.alloc(num_tokens)
 
@@ -616,7 +616,7 @@ class ScheduleBatch:
         # Allocate memory
         req_pool_indices = self.alloc_req_slots(bs)
         out_cache_loc = self.alloc_token_slots(extend_num_tokens)
-        # logger.debug(f"Allocated {extend_num_tokens} slots from KV Cache Pool for extend: {out_cache_loc}")
+        logger.debug(f"Allocated {extend_num_tokens} slots from KV Cache Pool for extend: {out_cache_loc}")
 
         pt = 0
         for i, req in enumerate(reqs):
@@ -641,7 +641,7 @@ class ScheduleBatch:
                 out_cache_loc[pt : pt + req.extend_input_len],
             )
 
-            logger.debug(f"Prepare for extend req {req.rid}, fill ids length: {len(req.fill_ids)}, extend length: {req.extend_input_len}, allocated pool index: {req.req_pool_idx}")
+            # logger.debug(f"Prepare for extend req {req.rid}, fill ids: {req.fill_ids}, fill ids length: {len(req.fill_ids)}, extend length: {req.extend_input_len}, allocated pool index: {req.req_pool_idx}")
 
             # Compute the relative logprob_start_len in an extend batch
             if req.logprob_start_len >= pre_len:
@@ -716,7 +716,7 @@ class ScheduleBatch:
         if self.token_to_kv_pool.available_size() >= bs:
             return True
 
-        # logger.debug(f"Check decode mem failed, available size: {self.token_to_kv_pool.available_size()}, evicting {bs} tokens")
+        logger.debug(f"Check decode mem failed, available size: {self.token_to_kv_pool.available_size()}, evicting {bs} tokens")
         self.tree_cache.evict(bs, self.token_to_kv_pool.free)
 
         if self.token_to_kv_pool.available_size() >= bs:
@@ -782,7 +782,7 @@ class ScheduleBatch:
                     - self.token_to_kv_pool.available_size()
                 )
                 residual_size = max(0, residual_size)
-                # logger.debug(f"Retract decode, evicting {residual_size} tokens")
+                logger.debug(f"Retract decode, evicting {residual_size} tokens")
                 self.tree_cache.evict(residual_size, self.token_to_kv_pool.free)
 
             req.prefix_indices = []
@@ -877,7 +877,7 @@ class ScheduleBatch:
         # Alloc mem
         bs = len(self.reqs)
         self.out_cache_loc = self.alloc_token_slots(bs)
-        # logger.debug(f"Allocated {bs} slots from KV Cache Pool for decode: {self.out_cache_loc}")
+        logger.debug(f"Allocated {bs} slots from KV Cache Pool for decode: {self.out_cache_loc}")
 
         if self.model_config.is_encoder_decoder:
             locs = self.encoder_lens + self.seq_lens

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 """Cache for chunked prefill, used when RadixCache is disabled."""
 
@@ -9,6 +10,9 @@ from sglang.srt.mem_cache.memory_pool import BaseTokenToKVPool, ReqToTokenPool
 
 if TYPE_CHECKING:
     from sglang.srt.managers.schedule_batch import Req
+
+
+logger = logging.getLogger(__name__)
 
 
 class ChunkCacheEntry:
@@ -53,6 +57,9 @@ class ChunkCache(BasePrefixCache):
         if req.rid in self.entries:
             del self.entries[req.rid]
 
+        logger.debug(f"After cache finished req {req.rid},")
+        self.pretty_print()
+
     def cache_unfinished_req(self, req: Req, token_ids: Optional[List[int]] = None):
         if token_ids is None:
             token_id_len = len(req.fill_ids)
@@ -71,6 +78,9 @@ class ChunkCache(BasePrefixCache):
         req.prefix_indices = kv_indices
         req.last_node = entry
 
+        logger.debug(f"After cache unfinished req {req.rid},")
+        self.pretty_print()
+
     def insert(self):
         raise NotImplementedError()
 
@@ -88,3 +98,10 @@ class ChunkCache(BasePrefixCache):
 
     def total_size(self):
         return 0
+
+    def pretty_print(self):
+        s = "Chunk Cache:\n"
+        for rid, entry in self.entries.items():
+            s += f"  {rid}: {entry.value}\n"
+
+        logger.info(s)

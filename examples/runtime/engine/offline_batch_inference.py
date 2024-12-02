@@ -16,7 +16,7 @@ def main():
         "Welcome to New",
     ]
     # Create a sampling params object.
-    sampling_params = {"temperature": 0.8, "top_p": 0.95, "max_new_tokens": 5}
+    sampling_params = {"temperature": 0.8, "top_p": 0.95, "max_new_tokens": 5, "ignore_eos": True}
 
     # Create an LLM.
     server_args = ServerArgs(
@@ -25,6 +25,7 @@ def main():
         chunked_prefill_size=4,
         enable_mixed_chunk=True,
         disable_radix_cache=True,
+        log_level="DEBUG",
     )
     llm = sgl.Engine(**dataclasses.asdict(server_args))
 

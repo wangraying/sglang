@@ -349,7 +349,7 @@ class Scheduler:
         while True:
             recv_reqs = self.recv_requests()
             if recv_reqs:
-                logger.debug(f"Received {len(recv_reqs)} requests: {[(req.rid, len(req.input_ids)) for req in recv_reqs if isinstance(req, TokenizedGenerateReqInput)]}")
+                logger.debug(f"Received {len(recv_reqs)} requests: {recv_reqs}")
 
             self.process_input_requests(recv_reqs)
 
@@ -653,17 +653,18 @@ class Scheduler:
                 # being chunked request keeps its rid but will get a new req_pool_idx
                 self.req_to_token_pool.free(self.being_chunked_req.req_pool_idx)
                 self.batch_is_full = False
-
+                logger.debug(f"Filter last batch with being chunked request, rids: {[req.rid for req in self.last_batch.reqs] if self.last_batch else []}")
             if not self.last_batch.is_empty():
                 if self.running_batch is None:
                     self.running_batch = self.last_batch
                 else:
                     self.running_batch.merge_batch(self.last_batch)
+                logger.debug(f"Merge last batch into running batch, size: {self.running_batch.batch_size()}, rids: {[req.rid for req in self.running_batch.reqs]}")
 
         # Prefill first
         new_batch = self.get_new_batch_prefill()
         if new_batch is not None:
-            logger.debug(f"New prefill batch, size: {new_batch.batch_size()}, rids={[req.rid for req in new_batch.reqs]}")
+            logger.debug(f"New prefill batch, size: {new_batch.batch_size()}, rids: {[req.rid for req in new_batch.reqs]}, input_ids: {new_batch.input_ids}, seq_lens: {new_batch.seq_lens}, prefix_lens: {new_batch.prefix_lens}, extend_lens: {new_batch.extend_lens}")
             return new_batch
 
         # Check memory
@@ -718,10 +719,10 @@ class Scheduler:
 
         has_being_chunked = self.being_chunked_req is not None
         if has_being_chunked:
-            inflight_req = self.being_chunked_req
+            cur_rid, cur_extend_input_len  = self.being_chunked_req.rid, self.being_chunked_req.extend_input_len
             self.being_chunked_req.init_next_round_input()
             self.being_chunked_req = adder.add_being_chunked_req(self.being_chunked_req)
-            logger.debug(f"Update being chunked request: {inflight_req.rid} to {self.being_chunked_req.rid if self.being_chunked_req else None}")
+            logger.debug(f"Update being chunked request, {(cur_rid, cur_extend_input_len)} to {(self.being_chunked_req.rid, self.being_chunked_req.extend_input_len) if self.being_chunked_req else None}")
 
         if self.lora_paths:
             lora_set = (
@@ -765,13 +766,12 @@ class Scheduler:
         ]
 
         if adder.new_being_chunked_req is not None:
-            logger.debug(f"Adding new inflight request: {adder.new_inflight_req.rid}, current being chunked request: {self.being_chunked_req.rid if self.being_chunked_req else None}")
+            logger.debug(f"Adding new inflight request: {adder.new_being_chunked_req.rid}")
             assert self.being_chunked_req is None
             self.being_chunked_req = adder.new_being_chunked_req
 
         if self.being_chunked_req:
             self.being_chunked_req.is_being_chunked += 1
-            logger.debug(f"Update being chunked request: {self.being_chunked_req.rid}, is_being_chunked = {self.being_chunked_req.is_being_chunked}")
 
         # Print stats
         if self.tp_rank == 0:
@@ -794,6 +794,7 @@ class Scheduler:
                 self.running_batch.prepare_for_decode(self.enable_overlap)
                 new_batch.mix_with_running(self.running_batch)
                 new_batch.decoding_reqs = self.running_batch.reqs
+                logger.debug(f"Mixed running with new batch, batch size: {new_batch.batch_size()}, rids: {[req.rid for req in new_batch.reqs]}, decoding_reqs: {[req.rid for req in new_batch.decoding_reqs]}")
             self.running_batch = None
         else:
             new_batch.decoding_reqs = None
@@ -829,6 +830,7 @@ class Scheduler:
                 self.new_token_ratio - self.new_token_ratio_decay,
                 self.min_new_token_ratio,
             )
+            logger.debug(f"Decay new_token_ratio: {old_ratio:.4f} -> {self.new_token_ratio:.4f}")
 
         # Check for jump-forward
         if not self.disable_jump_forward:
@@ -867,7 +869,7 @@ class Scheduler:
                     next_token_ids = torch.full((batch.batch_size(),), 0)
             batch.output_ids = next_token_ids
             ret = logits_output, next_token_ids, model_worker_batch.bid
-            logger.debug(f"Run batch #{model_worker_batch.bid}, mode={batch.forward_mode.name}, size={batch.batch_size()}, rids={[req.rid for req in batch.reqs]}, input length={len(batch.input_ids)}, output length={len(batch.output_ids)}")
+            logger.debug(f"Run batch #{model_worker_batch.bid}, mode={batch.forward_mode.name}, size={batch.batch_size()}, rids={[req.rid for req in batch.reqs]}, input_ids={model_worker_batch.input_ids.cpu().numpy()}, output_ids={next_token_ids.cpu().numpy()}")
         else:  # embedding or reward model
             assert batch.extend_num_tokens != 0
             model_worker_batch = batch.get_model_worker_batch()
@@ -921,7 +923,6 @@ class Scheduler:
 
                     if req.finished():
                         self.tree_cache.cache_finished_req(req)
-                        logger.debug(f"Cache finished request: {req.rid}")
                     elif not batch.decoding_reqs or req not in batch.decoding_reqs:
                         self.tree_cache.cache_unfinished_req(req)
 
@@ -935,7 +936,6 @@ class Scheduler:
                 else:
                     # being chunked reqs' prefill is not finished
                     req.is_being_chunked -= 1
-                    logger.debug(f"Update request: {req.rid}, is_being_chunked = {req.is_being_chunked}")
 
         else:  # embedding or reward model
             embeddings, bid = result
@@ -998,7 +998,6 @@ class Scheduler:
 
             if req.finished():
                 self.tree_cache.cache_finished_req(req)
-                logger.debug(f"Cache finished request: {req.rid}")
 
             if req.return_logprob:
                 req.output_token_logprobs.append(

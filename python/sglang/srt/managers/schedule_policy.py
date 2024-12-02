@@ -246,6 +246,8 @@ class PrefillAdder:
         else:
             add_req_state(req, insert_sort=True)
 
+        logger.debug(f"Add req: {req.rid}, req_states: {self.req_states}, cur_rem_tokens: {self.cur_rem_tokens}, rem_chunk_tokens: {self.rem_chunk_tokens}")
+
         cur_rem_tokens = self.cur_rem_tokens - len(req.origin_input_ids)
         tokens_freed = 0
         for i, (tokens_left, tokens_occupied) in enumerate(self.req_states):

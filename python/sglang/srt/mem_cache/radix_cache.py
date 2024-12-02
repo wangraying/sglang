@@ -122,9 +122,9 @@ class RadixCache(BasePrefixCache):
             req.req_pool_idx, : len(token_ids)
         ]
 
-        # self.pretty_print(print_value=True)
-        # logger.debug(f"Caching finished, tokens: {token_ids}")
-        # logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
+        self.pretty_print(print_value=True)
+        logger.debug(f"Caching finished, tokens: {token_ids}")
+        logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
 
         # Radix Cache takes one ref in memory pool
         new_prefix_len = self.insert(token_ids, kv_indices.clone())
@@ -133,8 +133,8 @@ class RadixCache(BasePrefixCache):
         # Remove req slot release the cache lock
         self.req_to_token_pool.free(req.req_pool_idx)
         self.dec_lock_ref(req.last_node)
-        # logger.debug(f"Free req_pool_idx: {req.req_pool_idx}, free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
-        # self.pretty_print(print_value=True)
+        logger.debug(f"Free req_pool_idx: {req.req_pool_idx}, free kv_indices: {kv_indices[len(req.prefix_indices) : new_prefix_len].cpu().numpy()}")
+        self.pretty_print(print_value=True)
 
     def cache_unfinished_req(self, req: Req, token_ids: Optional[List[int]] = None):
         """Cache request when it is unfinished."""
@@ -144,8 +144,8 @@ class RadixCache(BasePrefixCache):
         if token_ids is None:
             token_ids = req.fill_ids
 
-        # logger.debug(f"Caching unfinished, tokens: {token_ids}")
-        # logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
+        logger.debug(f"Caching unfinished, tokens: {token_ids}")
+        logger.debug(f"Before caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
         kv_indices = self.req_to_token_pool.req_to_token[
             req.req_pool_idx, : len(token_ids)
         ]
@@ -162,14 +162,14 @@ class RadixCache(BasePrefixCache):
             new_indices[len(req.prefix_indices) :],
         )
 
-        # logger.debug(f"After caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
-        # logger.debug(f"Update prefix match result, prefix_indices: {req.prefix_indices.data} -> {new_indices.data}, last_node: {req.last_node.key} -> {new_last_node.key}, {req.last_node.value} -> {new_last_node.value}")
+        logger.debug(f"After caching, pool id: {req.req_pool_idx}, pool content: {self.req_to_token_pool.req_to_token[req.req_pool_idx][:15].cpu().numpy()}")
+        logger.debug(f"Update prefix match result, prefix_indices: {req.prefix_indices.data} -> {new_indices.data}, last_node: {req.last_node.key} -> {new_last_node.key}, {req.last_node.value} -> {new_last_node.value}")
 
         self.dec_lock_ref(req.last_node)
         self.inc_lock_ref(new_last_node)
         req.prefix_indices = new_indices
         req.last_node = new_last_node
-        # self.pretty_print()
+        self.pretty_print()
 
     def pretty_print(self, print_value=False):
         s = "Radix Tree:\n"
