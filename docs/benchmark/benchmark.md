@@ -155,7 +155,7 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 
 **Output Throughput:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-output-throughpt-vs-chunk-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-output-throughput-vs-chunk-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
 **TTFT Latency (Normalized):**
