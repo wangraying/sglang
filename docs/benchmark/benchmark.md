@@ -74,16 +74,21 @@ For better visualization, normalize TTFT latency using the first value of each g
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
 </p>
 
+**Cache Hit Rate:**
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/cache-hit-rate-vs-schedule-policy.png" alt="Cache Hit Rate" style="width:80%; height:auto;"/>
+</p>
+
 ### Observations
 
 1. Random policy performs worse across all datasets, in terms of output throughput and TTFT. It is especially worse on
 Generated-Shared-Prefix dataset, since it fails to exploit the characteristic of sharing common prefix among
 consecutive requests in each sequence group, but it still needs to maintain the prefix structure in the radix tree.
 2. FCFS and LPM policies outperform the others across all the datasets, in terms of output throughput and TTFT.
-3. LOF policy performs poorly in terms of TTFT on datasets with random length, i.e. Random. This is expected since LOF
+3. LOF policy performs poorly in terms of TTFT on datasets with random length, i.e. Random dataset. This is expected since LOF
 policy offers no guarantee on TTFT.
 4. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT but decreasing ITL as
-the number of input tokens increases, when considering FCFS, LOF and LPM.
+the number of input tokens increases (also fixed input/output token ratio), when considering FCFS, LOF and LPM.
 5. For ShareGPT dataset, the performance metrics of different schedule policies don't differ much.
 
 ## Enabling and Disabling Radix Cache
@@ -172,9 +177,9 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-wo-mixed-running-normalized.png" alt="ITL Latency w.o. Mixed Running" style="width:80%; height:auto;"/>
 </p>
 
-### Observations
+#### Observations
 
-When mixed-running is disabled, we typically observe a decrease in TTFT latency as well as a decrease in ITL latency as the prefilled chunk size increases. This is expected since increasing chunk size alone without mixed-running, could yield a higher computational efficiency. Consequently, this can produce an increased output throughput and a reduced end-to-end latency. Specific figures are omitted here for brevity.
+When mixed-running is disabled, we typically observe a decrease in TTFT latency as well as a decrease in ITL latency as the prefilled chunk size increases. This is expected since increasing chunk size alone without mixed-running, could yield a higher computational efficiency. This is due to the fact that each prefilled batch is restricted to have a single chunking request at most. Consequently, an increase in prefilled chunk size can produce an increased output throughput and a reduced end-to-end latency. Specific figures are omitted here for brevity.
 
 ### With Mix-Running Enabled
 
@@ -188,7 +193,7 @@ When mixed-running is disabled, we typically observe a decrease in TTFT latency 
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized.png" alt="ITL Latency w. Mixed Running" style="width:80%; height:auto;"/>
 </p>
 
-### Observations
+#### Observations
 
 1. With mixed-running enabled, we observe an increased ITL latency as the prefill chunk size increases. This is because an increase in chunk size leads to a decrease in the number of prefilled chunks, thus reducing the number of decode tokens to piggyback in a mixed running batch.
 2. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger prefilled chunk size is preferred. 
