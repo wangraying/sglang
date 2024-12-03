@@ -13,13 +13,13 @@
 The datasets for benchmarking are as follows, each with varying sizes and characteristics.
 
 | Dataset Name           | Total Input Tokens | Total Output Tokens | Average System Prompt Length | Average Question Length |
-|------------------------|--------------------|---------------------|------------------------------|-------------------------|
-| Random-1000            | 3000000            | 300000              | -      | -   |
-| Random-2000            | 6000000            | 600000              | -      | -   |
-| Random-4000            | 12000000           | 1200000             | -      | -   |
-| Random                 | 6020143            | 601639              | -      | -   |
-| ShareGPT               | 6664740            | 5940589             | -      | -   |
-| Generated-Shared-Prefix| 10948645           | 1048576             | 2137.7 | 535.3
+|------------------------|--------------------|-------------------|------------------------------|-------------------------|
+| Random-1000            | 3,000,000            | 300,000           | -      | -   |
+| Random-2000            | 6,000,000            | 600,000           | -      | -   |
+| Random-4000            | 12,000,000           | 1,200,000         | -      | -   |
+| Random                 | 6,020,143            | 601,639           | -      | -   |
+| ShareGPT               | 6,664,740            | 5,940,589         | -      | -   |
+| Generated-Shared-Prefix| 10,948,645           | 1,048,576         | 2137.7 | 535.3
 
 - **Random-*n***: A dataset of 3000 sequences consisting of randomly generated tokens, each sequence maintaining a fixed input length of *n*.
 - **Random**: A dataset of 3000 sequences consisting of randomly generated tokens, each sequence has a random input length, the random range ratio is 0.5.
@@ -74,10 +74,15 @@ For better visualization, normalize TTFT latency using the first value of each g
 
 ### Observations
 
-1. Random policy almost always performs the worst across all datasets, in terms of output throughput and TTFT.
+1. Random policy performs worse across all datasets, in terms of output throughput and TTFT. It is especially worse on
+Generated-Shared-Prefix dataset, since it fails to exploit the characteristic of sharing common prefix among
+consecutive requests in each sequence group, but it still needs to maintain the prefix structure in the radix tree.
 2. FCFS and LPM policies outperform the others across all the datasets, in terms of output throughput and TTFT.
-3. LOF policy performs poorly in terms of TTFT on datasets with random output length, i.e. ShareGPT and Random, which aligns with our intuition that LOF policy has no guarantee on TTFT.
-4. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT but decreasing ITL for longer sequences, when considering FCFS, LOF and LPM.
+3. LOF policy performs poorly in terms of TTFT on datasets with random length, i.e. Random. This is expected since LOF
+policy offers no guarantee on TTFT.
+4. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT but decreasing ITL as
+the number of tokens increases, when considering FCFS, LOF and LPM.
+5. For ShareGPT dataset, the performance metrics of different schedule policies don't differ much.
 
 ## Enabling and Disabling Radix Cache
 
@@ -106,12 +111,17 @@ For better visualization, normalize TTFT latency using the first value of each g
 
 ### Observations
 
-1. For Generated-Shared-Prefix dataset, enabling radix cache can significantly improve output throughput and decrease TTFT latency,
-at the cost of increasing ITL latency, due to cache operations.
-2. For other datasets, enabling cache may not result in obvious performance gains.
-Usually, it could lead to more overhead, resulting in a slightly higher TTFT and reduced output throughput.
-The only exception is the random-4000 dataset, which could see a small 1% improvement in some cases.
-3. It is noteworthy that similar trends are observed when using chunked prefills with mixed-running enabled. We have omitted the details for brevity.
+1. For Generated-Shared-Prefix dataset, enabling radix cache can significantly improve output throughput and decrease
+TTFT latency. For other datasets, this performance improvement may not be as obvious. This is expected since enabling
+radix cache allows for sharing common prefixes among requests. For Generated-Shared-Prefix dataset, consecutive
+requests within each sequence group share a long common system prompt, and this will greatly decrease computation
+when radix cache is enabled.
+2. Enabling radix cache could also lead to a higher ITL, we attribute it to the overhead of maintaining the prefix
+structure in the radix tree. (Peculiar datapoint on dataset Random-4000, with random policy)
+3. Similar trends are observed when using chunked prefills with mixed-running enabled. We omit the details for brevity.
+4. We conclude that for datasets that has a characteristic of sharing common prefix among requests, radix cache is
+preferable to boost performance, otherwise, a simple key-value based chunk cache, i.e. the implentation when radix cache
+is disabled, is sufficient to achieve good performance.
 
 ## Varying Varying Cache Sizes
 
@@ -129,26 +139,22 @@ The only exception is the random-4000 dataset, which could see a small 1% improv
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-cache-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
-**TTFT Latency (Normalized):**
+**Mean End-to-End Latency (Normalized):**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-vs-cache-size-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
-</p>
-
-**ITL Latency:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-vs-cache-size.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/mean-e2e-latency-vs-cache-size-normalized.png" alt="Mean End-to-End Latency" style="width:80%; height:auto;"/>
 </p>
 
 ### Observations
 
-Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size leads to a larger batch size. We observed higher output throughput, reduced TTFT, and ITL across all datasets as the cache size increases. However, for the Random-1000 and ShareGPT datasets, which have shorter context lengths, the performance gains saturates when the cache size is larger than 64K.
+Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing batch size, which almost always leads to a higher throughput and reduced end-to-end latency. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K.
 
 ## Varying Prefilled Chunk Sizes
 
 ### Experiment Settings
 
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
-- Vary the prefilled chunk sizes among 256, 512, 1024 and 2048, with mixed chunks enabled.
+- Vary the prefilled chunk sizes among 256, 512, 1024, 2048 and 4096, with mixed-running enabled.
+- Performance is compared with the radix cache both enabled and disabled. When running with radix cache disabled, a [patch](https://github.com/sgl-project/sglang/pull/2290) is applied to the original branch.
 - Default values are used for all other parameters, and FCFS policy is used for scheduling.
 
 ### Performance
