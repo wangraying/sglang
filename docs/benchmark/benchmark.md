@@ -7,6 +7,7 @@
 - **CPU Memory**: 1.5 TB
 - **Software**: SGLang v0.3.2.post2, PyTorch 2.4.0
 - **CUDA Version**: 12.4
+- **Model**: Llama-3.1-8B-Instruct
 
 # Datasets Overview
 
@@ -35,6 +36,10 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 - Default values are used for all other parameters, such as the prefilled chunk size is fixed to 8192 and mixed-running is not enabled.
 
 ### Performance
+
+We begin by presenting the performance metrics gathered from the Random-2000 dataset, which could give us a clear numerical overview.
+Then, we compare the three primary metrics of interest - output throughput, TTFT (Time to First Token), and ITL (Inter-Token Latency) — across all six datasets using different schedule policies.
+
 <p style="text-align: center;">
 <em>Table: Performance Metrics collected on Random-2000 dataset.</em>
 </p>
@@ -47,9 +52,6 @@ The datasets for benchmarking are as follows, each with varying sizes and charac
 | DFS-Weight        | 4.1                        | 818.4                           | 282485.2                     | 271800.6       | 566219.4       | 569575.0       | 53.8          | 31.6          | 245.3         |
 | LOF               | 4.2                        | 844.0                           | 267246.1                     | 255257.9       | 487189.1       | 508590.9       | 60.4          | 30.7          | 183.0         |
 
-*Notes:*
-1. "TTFT" stands for "Time to First Token".
-2. "ITL" stands for "Inter-Token Latency".
 
 **Output Throughput:**
 <p align="center">
@@ -117,9 +119,9 @@ radix cache allows for sharing common prefixes among requests. For Generated-Sha
 requests within each sequence group share a long common system prompt, and this will greatly decrease computation
 when radix cache is enabled.
 2. Enabling radix cache could also lead to a higher ITL, we attribute it to the overhead of maintaining the prefix
-structure in the radix tree. (Peculiar datapoint on dataset Random-4000, with random policy)
+structure in the radix tree.
 3. Similar trends are observed when using chunked prefills with mixed-running enabled. We omit the details for brevity.
-4. We conclude that for datasets that has a characteristic of sharing common prefix among requests, radix cache is
+4. We conclude that for scenarios that have a characteristic of sharing common prefix among requests, radix cache is
 preferable to boost performance, otherwise, a simple key-value based chunk cache, i.e. the implentation when radix cache
 is disabled, is sufficient to achieve good performance.
 
@@ -190,4 +192,4 @@ When mixed-running is disabled, we typically observe a decrease in TTFT latency 
 
 1. With mixed-running enabled, we observe an increased ITL latency as the prefill chunk size increases. This is because an increase in chunk size leads to a decrease in the number of prefilled chunks, thus reducing the number of decode tokens to piggyback in a mixed running batch.
 2. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger prefilled chunk size is preferred. 
-3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting prefilled chunk size to 512 with mixed running enabled seems to be a good starting point.
+3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting prefilled chunk size to 512 with mixed-running enabled seems to be a good point to start with.
