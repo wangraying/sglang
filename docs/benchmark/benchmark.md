@@ -217,31 +217,54 @@ is disabled, is sufficient to achieve good performance.
 
 Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K, indicating it is becoming compute-bound.
 
-## Performance with Prefilled Chunks
+## Performance with Chunked Prefills
 
 ### Experiment Settings
 
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
-- Vary the prefilled chunk sizes among 512, 1024, 2048 and 8192.
+- Vary the prefilled chunk sizes among 256, 512, 1024, 2048 and 8192.
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
 
 ### With Mix-Running Disabled
 
-**TTFT Latency (Normalized):**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-wo-mixed-running-normalized.png" alt="TTFT Latency w.o. Mixed Running" style="width:80%; height:auto;"/>
-</p>
+**Throughput:**
 
-**ITL Latency (Normalized):**
+<table>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/input-throughput-vs-chunk-size-wo-mixed-running-line-chart.png" alt="Input Throughput v.o. Mixed-Running"><br>
+      (a) Input Throughput v.o. Mixed-Running
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-chunk-size-wo-mixed-running-line-chart.png" alt="Output Throughput v.o. Mixed-Running"><br>
+      (b) Output Throughput v.o. Mixed-Running
+    </td>
+  </tr>
+</table>
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-wo-mixed-running-normalized.png" alt="ITL Latency w.o. Mixed Running" style="width:80%; height:auto;"/>
-</p>
+**Latency (Normalized):**
+
+<table>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-wo-mixed-running-normalized.png" alt="P99 TTFT Latency w.o. Mixed-Running"><br>
+      (c) P99 TTFT Latency w.o. Mixed-Running
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-wo-mixed-running-normalized.png" alt="P99 ITL Latency w.o. Mixed-Running"><br>
+      (d) P99 ITL Latency w.o. Mixed-Running
+    </td>
+  </tr>
+</table>
 
 #### Observations
 
-When mixed-running is disabled, we typically observe a decrease in TTFT latency as well as a decrease in ITL latency as the prefilled chunk size increases. This is expected since increasing chunk size alone without mixed-running, could yield a higher computational efficiency. This is due to the fact that each prefilled batch is restricted to have a single chunking request at most. Consequently, an increase in prefilled chunk size can produce an increased output throughput and a reduced end-to-end latency. Specific figures are omitted here for brevity.
+When mixed-running is disabled, we typically observe an increased input throughput and a decreased TTFT latency as the prefilled chunk size increases. This is expected due to the higher prefill efficiency of larger prefilled chunks.
+
+In other words, when comparing to the data points with a prefilled chunk size set to 8192, which is also tht default setting, meaning no chunking occurs in our experiments, using prefilled chunks technique alone without mixed-running increases TTFT latency.
+
+The impact on ITL latency is not that obvious, as it varies with the characteristics of the datasets.
 
 ### With Mix-Running Enabled
 
