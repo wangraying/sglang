@@ -165,7 +165,7 @@ requests within each sequence group share a long common system prompt, and this 
 when radix cache is enabled.
 2. Enabling radix cache could also lead to a higher ITL, we attribute it to the overhead of maintaining the prefix
 structure in the radix tree.
-3. Similar trends are observed when using chunked prefills with mixed-running enabled. Figures (a) and (b) are included below to reinforce our observations.
+3. Similar trends are observed when using chunked prefills with mixed-running enabled. Figures (a), (b) and (c) are included below to reinforce our observations.
 4. We conclude that for scenarios that have a characteristic of sharing common prefix among requests, radix cache is
 preferable to boost performance, otherwise, a simple key-value based chunk cache, i.e. the implentation when radix cache
 is disabled, is sufficient to achieve good performance.
@@ -193,7 +193,7 @@ is disabled, is sufficient to achieve good performance.
 
 - The request rate is fixed at 16.
 - The chunked prefill size is set to 512, with mixed-running enabled.
-- Vary the cache sizes among 32K, 64K, and 128K.
+- Vary the maximum number of tokens among 32K, 64K, and 128K.
 - Default values are used for all other parameters, and LPM policy is used for scheduling.
 
 ### Performance
