@@ -5,7 +5,7 @@
 - **GPUs**: NVIDIA A100-SXM4-40GB
 - **CPU Cores**: 96
 - **CPU Memory**: 1.5 TB
-- **Software**: SGLang v0.3.2.post2, PyTorch 2.4.0
+- **Software**: SGLang v0.3.5.post2, PyTorch 2.4.0
 - **CUDA Version**: 12.4
 - **Model**: Llama-3.1-8B-Instruct
 
@@ -169,11 +169,11 @@ is disabled, is sufficient to achieve good performance.
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-chunked-prefills-normalized.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Prefilled Chunks"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-chunked-prefills-normalized.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
       (a) P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache-chunked-prefills.png" alt="P99 ITL Latency on Random-n dataset"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache-chunked-prefills.png" alt="P99 ITL Latency w./w.o Cache with Chunked Prefills"><br>
       (b) P99 ITL Latency w./w.o Cache with Chunked Prefills
     </td>
   </tr>
@@ -195,14 +195,27 @@ is disabled, is sufficient to achieve good performance.
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-cache-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
-**Mean End-to-End Latency (Normalized):**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/mean-e2e-latency-vs-cache-size-normalized.png" alt="Mean End-to-End Latency" style="width:80%; height:auto;"/>
-</p>
+**Latency:**
+<table>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/mean-e2e-latency-vs-cache-size-normalized.png" alt="Mean End-to-End Latency under Different Cache Sizes"><br>
+      (a) Mean End-to-End Latency (Normalized) under Different Cache Sizes
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-vs-cache-size-line-chart.png" alt="P99 TTFT Latency under Different Cache Sizes"><br>
+      (b) P99 TTFT Latency under Different Cache Sizes
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-vs-cache-size-line-chart.png" alt="P99 ITL Latency under Different Cache Sizes"><br>
+      (c) P99 ITL Latency under Different Cache Sizes
+    </td>
+  </tr>
+</table>
 
 ### Observations
 
-Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing batch size, which almost always leads to a higher throughput and reduced end-to-end latency. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K.
+Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K, indicating it is becoming compute-bound.
 
 ## Performance with Prefilled Chunks
 
