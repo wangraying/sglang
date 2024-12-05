@@ -40,7 +40,7 @@ The three primary metrics of interest are:
 
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
 - Vary the schedule policies among LPM (Longest-Prefix-Match), FCFS (First-Come-First-Serve), DFS-Weight, Random, and LOF (Longest-Output-First).
-- Default values are used for all other parameters, such as the prefilled chunk size is fixed to 8192 and mixed-running is not enabled.
+- Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
 
 ### Performance
 
@@ -133,7 +133,7 @@ policy offers no guarantee on TTFT. Figure (c) has a better illustration of it.
 
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
 - When the radix cache is disabled, LPM and DFS-Weight policies are equivalent to FCFS policy. Therefore, we only compare FCFS, LOF and Random policies in this experiment.
-- Default values are used for all other parameters, such as the prefilled chunk size is fixed to 8192 and mixed-running is not enabled.
+- Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
 
 ### Performance
 
@@ -184,7 +184,7 @@ is disabled, is sufficient to achieve good performance.
 ### Experiment Settings
 
 - The request rate is fixed at 16.
-- The prefilled chunk size is set to 512, with mixed-running enabled.
+- The chunked prefill size is set to 512, with mixed-running enabled.
 - Vary the cache sizes among 32K, 64K, and 128K.
 - Default values are used for all other parameters, and LPM policy is used for scheduling.
 
@@ -222,11 +222,11 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 ### Experiment Settings
 
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
-- Vary the prefilled chunk sizes among 256, 512, 1024, 2048 and 8192.
+- Vary the prefill chunk sizes among 256, 512, 1024, 2048 and 8192.
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
 
-### With Mix-Running Disabled
+### With Mixed-Running Disabled
 
 **Throughput:**
 
@@ -234,11 +234,11 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
   <tr>
   <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/input-throughput-vs-chunk-size-wo-mixed-running-line-chart.png" alt="Input Throughput v.o. Mixed-Running"><br>
-      (a) Input Throughput v.o. Mixed-Running
+      (a) Input Throughput w.o. Mixed-Running
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-chunk-size-wo-mixed-running-line-chart.png" alt="Output Throughput v.o. Mixed-Running"><br>
-      (b) Output Throughput v.o. Mixed-Running
+      (b) Output Throughput w.o. Mixed-Running
     </td>
   </tr>
 </table>
@@ -260,13 +260,44 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 
 #### Observations
 
-When mixed-running is disabled, we typically observe an increased input throughput and a decreased TTFT latency as the prefilled chunk size increases. This is expected due to the higher prefill efficiency of larger prefilled chunks.
+When mixed-running is disabled, we typically observe an increased input/output throughput and a decreased TTFT latency as the chunked prefill size increases. This is expected due to the higher prefill efficiency of larger prefills. The impact on ITL latency is not that obvious, as it varies with the characteristics of the datasets.
 
-In other words, when comparing to the data points with a prefilled chunk size set to 8192, which is also tht default setting, meaning no chunking occurs in our experiments, using prefilled chunks technique alone without mixed-running increases TTFT latency.
+### With Mixed-Running Enabled
 
-The impact on ITL latency is not that obvious, as it varies with the characteristics of the datasets.
+#### Impact of Enabling Mixed-Running
 
-### With Mix-Running Enabled
+<table>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/gen-perf-w-wo-mixed-running.png" alt="Performance on Generated-Shared-Prefix Dataset"><br>
+      (a) Performance on Generated-Shared-Prefix Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-perf-w-wo-mixed-running.png" alt="Performance on Random Dataset"><br>
+      (b) Performance on Random Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-perf-w-wo-mixed-running.png" alt="Performance on Random-1000 Dataset"><br>
+      (c) Performance on Random-1000 Dataset
+    </td>
+  </tr>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-perf-w-wo-mixed-running.png" alt="Performance on Random-2000 Dataset"><br>
+      (d) Performance on Random-2000 Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-perf-w-wo-mixed-running.png" alt="Performance on Random-4000 Dataset"><br>
+      (e) Performance on Random-4000 Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/sharegpt-perf-w-wo-mixed-running.png" alt="Performance on ShareGPT Dataset"><br>
+      (f) Performance on ShareGPT Dataset
+    </td>
+  </tr>
+</table>
+
+#### Varying Chunk Sizes
 
 **TTFT Latency (Normalized):**
 <p align="center">
@@ -280,6 +311,7 @@ The impact on ITL latency is not that obvious, as it varies with the characteris
 
 #### Observations
 
-1. With mixed-running enabled, we observe an increased ITL latency as the prefill chunk size increases. This is because an increase in chunk size leads to a decrease in the number of prefilled chunks, thus reducing the number of decode tokens to piggyback in a mixed running batch.
-2. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger prefilled chunk size is preferred.
-3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting prefilled chunk size to 512 with mixed-running enabled seems to be a good point to start with.
+1. By comparing the performance when mixed-running is enabled and disabled, we could observe an expected output throughput, which is along with a decreased ITL latency in most cases.
+2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefill will create *generation stalls*.
+3. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger chunked prefill size is preferred.
+4. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting chunked prefill size to 512 with mixed-running enabled seems to be a good point to start with.
