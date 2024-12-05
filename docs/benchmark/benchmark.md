@@ -309,9 +309,26 @@ When mixed-running is disabled, we typically observe an increased input/output t
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized.png" alt="ITL Latency w. Mixed Running" style="width:80%; height:auto;"/>
 </p>
 
+#### Varying Output Lengths
+
+We also studied the performance across three datasets (including two newly created ones: Random-2000-400 and Random-2000-800), each with a consistent input length of 2000 and different output lengths of 200, 400, and 800, respectively. The corresponding output throughput and TTFT latency are detailed below:
+
+<table>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-output-length-w-mixed-running.png" alt="Output Throughput on Datasets with Different Output Lengths"><br>
+      (a) Output Throughput on Datasets with Different Output Lengths
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-output-throughput-w-mixed-running.png" alt="TTFT Latency on Datasets with Different Output Lengths"><br>
+      (b) TTFT Latency on Datasets with Different Output Lengths
+    </td>
+  </tr>
+</table>
+
 #### Observations
 
 1. By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across most datasets.
-2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefill will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
+2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
 3. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger chunked prefill size is preferred.
 4. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting chunked prefill size to 512 with mixed-running enabled seems to be a good point to start with.
