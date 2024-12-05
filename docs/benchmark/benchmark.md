@@ -311,7 +311,7 @@ When mixed-running is disabled, we typically observe an increased input/output t
 
 #### Observations
 
-1. By comparing the performance when mixed-running is enabled and disabled, we could observe an expected output throughput, which is along with a decreased ITL latency in most cases.
-2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefill will create *generation stalls*.
+1. By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across most datasets.
+2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefill will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
 3. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger chunked prefill size is preferred.
 4. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting chunked prefill size to 512 with mixed-running enabled seems to be a good point to start with.
