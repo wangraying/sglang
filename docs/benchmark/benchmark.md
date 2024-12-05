@@ -156,7 +156,7 @@ policy offers no guarantee on TTFT. Figure (c) has a better illustration of it.
 
 1. For Generated-Shared-Prefix dataset, enabling radix cache can significantly improve output throughput and decrease
 TTFT latency. For other datasets, this performance improvement may not be as obvious. This is expected since enabling
-radix cache allows for sharing common prefixes among requests. For Generated-Shared-Prefix dataset, consecutive
+radix cache allows for sharing common prefix among requests. For Generated-Shared-Prefix dataset, consecutive
 requests within each sequence group share a long common system prompt, and this will greatly decrease computation
 when radix cache is enabled.
 2. Enabling radix cache could also lead to a higher ITL, we attribute it to the overhead of maintaining the prefix
@@ -169,17 +169,21 @@ is disabled, is sufficient to achieve good performance.
 <table>
   <tr>
     <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache-chunked-prefills-normalized.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (a) Output Throughput (Normalized) w./w.o Cache with Chunked Prefills
+    </td>
+    <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-chunked-prefills-normalized.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
       (a) P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache-chunked-prefills.png" alt="P99 ITL Latency w./w.o Cache with Chunked Prefills"><br>
-      (b) P99 ITL Latency w./w.o Cache with Chunked Prefills
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache-chunked-prefills-normalized.png" alt="P99 ITL Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (b) P99 ITL Latency (Normalized) w./w.o Cache with Chunked Prefills
     </td>
   </tr>
 </table>
 
-## Varying Varying Cache Sizes
+## Varying Cache Sizes
 
 ### Experiment Settings
 
@@ -215,7 +219,7 @@ is disabled, is sufficient to achieve good performance.
 
 ### Observations
 
-Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K, indicating it is becoming compute-bound.
+Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing the batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K, indicating it is becoming compute-bound.
 
 ## Performance with Chunked Prefills
 
@@ -320,8 +324,12 @@ We also studied the performance across three datasets (including two newly creat
       (a) Output Throughput on Datasets with Different Output Lengths
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-output-throughput-w-mixed-running.png" alt="TTFT Latency on Datasets with Different Output Lengths"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-output-length-w-mixed-running.png" alt="TTFT Latency on Datasets with Different Output Lengths"><br>
       (b) TTFT Latency on Datasets with Different Output Lengths
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-output-length-w-mixed-running.png" alt="ITL Latency on Datasets with Different Output Lengths"><br>
+      (b) ITL Latency on Datasets with Different Output Lengths
     </td>
   </tr>
 </table>
