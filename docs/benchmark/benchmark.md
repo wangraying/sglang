@@ -161,10 +161,23 @@ requests within each sequence group share a long common system prompt, and this 
 when radix cache is enabled.
 2. Enabling radix cache could also lead to a higher ITL, we attribute it to the overhead of maintaining the prefix
 structure in the radix tree.
-3. Similar trends are observed when using chunked prefills with mixed-running enabled. We omit the details for brevity.
+3. Similar trends are observed when using chunked prefills with mixed-running enabled. Figures (a) and (b) are included below to reinforce our observations.
 4. We conclude that for scenarios that have a characteristic of sharing common prefix among requests, radix cache is
 preferable to boost performance, otherwise, a simple key-value based chunk cache, i.e. the implentation when radix cache
 is disabled, is sufficient to achieve good performance.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-chunked-prefills-normalized.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Prefilled Chunks"><br>
+      (a) P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache-chunked-prefills.png" alt="P99 ITL Latency on Random-n dataset"><br>
+      (b) P99 ITL Latency w./w.o Cache with Chunked Prefills
+    </td>
+  </tr>
+</table>
 
 ## Varying Varying Cache Sizes
 
