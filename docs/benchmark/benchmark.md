@@ -142,15 +142,19 @@ policy offers no guarantee on TTFT. Figure (c) has a better illustration of it.
 <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache.png" alt="Output Throughput" style="width:80%; height:auto;"/>
 </p>
 
-**TTFT Latency (Normalized):**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
-</p>
-
-**ITL Latency:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
-</p>
+**Latency:**
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-normalized.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache"><br>
+      (a) P99 TTFT Latency (Normalized) w./w.o Cache
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache.png" alt="P99 ITL Latency w./w.o Cache"><br>
+      (b) P99 ITL Latency w./w.o Cache
+    </td>
+  </tr>
+</table>
 
 ### Observations
 
@@ -174,11 +178,11 @@ is disabled, is sufficient to achieve good performance.
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-w-wo-cache-chunked-prefills-normalized.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
-      (a) P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills
+      (b) P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-w-wo-cache-chunked-prefills-normalized.png" alt="P99 ITL Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
-      (b) P99 ITL Latency (Normalized) w./w.o Cache with Chunked Prefills
+      (c) P99 ITL Latency (Normalized) w./w.o Cache with Chunked Prefills
     </td>
   </tr>
 </table>
@@ -303,15 +307,18 @@ When mixed-running is disabled, we typically observe an increased input/output t
 
 #### Varying Chunk Sizes
 
-**TTFT Latency (Normalized):**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-w-mixed-running-normalized.png" alt="TTFT Latency w. Mixed Running" style="width:80%; height:auto;"/>
-</p>
-
-**ITL Latency (Normalized):**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized.png" alt="ITL Latency w. Mixed Running" style="width:80%; height:auto;"/>
-</p>
+<table>
+  <tr>
+  <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-w-mixed-running-normalized.png" alt="TTFT Latency (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
+      (a) TTFT Latency  (Normalized) w. Mixed Running with Different Chunk Sizes
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized.png" alt="ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
+      (b) ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes
+    </td>
+    </tr>
+</table>
 
 #### Varying Output Lengths
 
