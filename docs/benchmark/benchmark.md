@@ -223,7 +223,7 @@ is disabled, is sufficient to achieve good performance.
 
 ### Observations
 
-Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing the batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets, these performance gains saturate after the cache size exceeds 64K, indicating it is becoming compute-bound.
+Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing the batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets which have relatively shorter sequence lengths, these performance gains saturate after the cache size exceeds 64K.
 
 ## Performance with Chunked Prefills
 
