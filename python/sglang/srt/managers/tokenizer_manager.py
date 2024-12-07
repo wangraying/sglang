@@ -399,9 +399,14 @@ class TokenizerManager:
         req = GetCacheStatReq()
         self.send_to_scheduler.send_pyobj(req)
 
-        self.cache_status = asyncio.Future()
-        res = await self.cache_status
-        return res
+        self.cache_stat_result = asyncio.Future()
+        if self.server_args.dp_size == 1:
+            result = await self.cache_stat_result
+            return result
+        else:
+            self.cache_stat_tmp = []
+            result = await self.cache_stat_result
+            return result
 
     async def get_memory_pool_size(self):
         if self.to_create_loop:
@@ -517,7 +522,12 @@ class TokenizerManager:
 
         while True:
             recv_obj: Union[
-                BatchStrOut, BatchEmbeddingOut, BatchTokenIDOut, UpdateWeightReqOutput
+                BatchStrOut,
+                BatchEmbeddingOut,
+                BatchTokenIDOut,
+                UpdateWeightReqOutput,
+                GetMemPoolSizeReqOutput,
+                GetCacheStatReqOutput
             ] = await self.recv_from_detokenizer.recv_pyobj()
 
             if isinstance(recv_obj, UpdateWeightReqOutput):
@@ -539,7 +549,14 @@ class TokenizerManager:
                         self.mem_pool_size.set_result(self.mem_pool_size_tmp)
                 continue
             elif isinstance(recv_obj, GetCacheStatReqOutput):
-                self.cache_status.set_result(recv_obj)
+                if self.server_args.dp_size == 1:
+                    self.cache_stat_result.set_result(recv_obj)
+                else:
+                    self.cache_stat_tmp.append(recv_obj)
+                    if len(self.cache_stat_tmp) == self.server_args.dp_size:
+                        self.cache_stat_result.set_result(
+                            self.cache_stat_tmp
+                        )
                 continue
 
             assert isinstance(
