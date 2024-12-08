@@ -41,6 +41,7 @@ The three primary metrics of interest are:
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
 - Vary the schedule policies among LPM (Longest-Prefix-Match), FCFS (First-Come-First-Serve), DFS-Weight, Random, and LOF (Longest-Output-First).
 - Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
+- Throughout our experiments, we studied a data parallel (dp) size of 1 and a tensor parallel (tp) size of 1, following the default setting. We will not reiterate it in the subsequent sections.
 
 ### Performance
 
@@ -95,7 +96,7 @@ consecutive requests in each sequence group, but it still needs to maintain the 
 policy offers no guarantee on TTFT. Figure (c) has a better illustration of it.
 3. FCFS and LPM policies outperform the others across all the datasets, in terms of output throughput and TTFT.
 4. For ShareGPT dataset, the performance metrics of different schedule policies don't differ much.
-5. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT as the number of input token increases for all schedule policies, this is easy to derive. We also observe a trend of decreasing ITL when using FCFS, LOF and LPM policies. See Figures (d) and (e) for more details.
+5. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT as the number of input tokens increases for all schedule policies, this is easy to derive. We also observe a trend of decreasing ITL when using FCFS, LOF and LPM policies. See Figures (d) and (e) for more details.
 
 
 <table>
@@ -346,4 +347,4 @@ We also studied the performance across three datasets (including two newly creat
 1. By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across most datasets.
 2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
 3. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger chunked prefill size is preferred.
-4. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. But setting chunked prefill size to 512 with mixed-running enabled seems to be a good point to start with.
+4. The overall impact varies with the characteristics of the datasets and the parallelism strategies. The optimal setting may need more sophisticated methods for exploration and exploitation. But for tp size of 1, as it is the case in our experiments, setting chunked prefill size to 512 with mixed-running enabled seems to be a good point to start with.
