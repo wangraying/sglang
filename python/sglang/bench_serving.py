@@ -469,9 +469,47 @@ def get_dataset(args, tokenizer):
             output_len=args.gen_output_len,
             tokenizer=tokenizer,
         )
+    # support reading dataset from dumped json file
+    elif args.dataset_name == "dumped":
+        input_requests = load_dumped_requests(args.dataset_path)
     else:
         raise ValueError(f"Unknown dataset: {args.dataset_name}")
     return input_requests
+
+
+def get_server_args(args):
+    server_args = {}
+    if args.backend == "sglang":
+        server_url = (
+            f"{args.base_url}/get_server_info"
+            if args.base_url
+            else f"http://{args.host}:{args.port}/get_server_info"
+        )
+
+        try:
+            response = requests.get(server_url)
+            response.raise_for_status()
+            server_args = response.json()
+        except Exception as e:
+            print(f"Failed to get server args from {server_url}. Error: {e}")
+
+    return server_args
+
+
+def flush_server_cache(args):
+    if args.backend == "sglang":
+        server_url = (
+            f"{args.base_url}/flush_cache"
+            if args.base_url
+            else f"http://{args.host}:{args.port}/flush_cache"
+        )
+
+        try:
+            response = requests.post(server_url)
+            response.raise_for_status()
+            print("Server cache flushed.")
+        except Exception as e:
+            print(f"Failed to flush server cache from {server_url}. Error: {e}")
 
 
 ASYNC_REQUEST_FUNCS = {
@@ -502,14 +540,17 @@ class BenchmarkMetrics:
     median_ttft_ms: float
     std_ttft_ms: float
     p99_ttft_ms: float
+    p95_ttft_ms: float
     mean_tpot_ms: float
     median_tpot_ms: float
     std_tpot_ms: float
     p99_tpot_ms: float
+    p95_tpot_ms: float
     mean_itl_ms: float
     median_itl_ms: float
     std_itl_ms: float
     p99_itl_ms: float
+    p95_itl_ms: float
     mean_e2e_latency_ms: float
     median_e2e_latency_ms: float
 
@@ -784,6 +825,12 @@ def sample_generated_shared_prefix_requests(
     return input_requests
 
 
+def load_dumped_requests(dataset_path: str) -> List[Tuple[str, int, int]]:
+    with open(dataset_path) as f:
+        dataset = json.load(f)
+    return dataset
+
+
 async def get_request(
     input_requests: List[Tuple[str, int, int]],
     request_rate: float,
@@ -861,14 +908,17 @@ def calculate_metrics(
         median_ttft_ms=np.median(ttfts or 0) * 1000,
         std_ttft_ms=np.std(ttfts or 0) * 1000,
         p99_ttft_ms=np.percentile(ttfts or 0, 99) * 1000,
+        p95_ttft_ms=np.percentile(ttfts or 0, 95) * 1000,
         mean_tpot_ms=np.mean(tpots or 0) * 1000,
         median_tpot_ms=np.median(tpots or 0) * 1000,
         std_tpot_ms=np.std(tpots or 0) * 1000,
         p99_tpot_ms=np.percentile(tpots or 0, 99) * 1000,
+        p95_tpot_ms=np.percentile(tpots or 0, 95) * 1000,
         mean_itl_ms=np.mean(itls or 0) * 1000,
         median_itl_ms=np.median(itls or 0) * 1000,
         std_itl_ms=np.std(itls or 0) * 1000,
         p99_itl_ms=np.percentile(itls or 0, 99) * 1000,
+        p95_itl_ms=np.percentile(itls or 0, 95) * 1000,
         mean_e2e_latency_ms=np.mean(e2e_latencies) * 1000,
         median_e2e_latency_ms=np.median(e2e_latencies) * 1000,
     )
@@ -1026,62 +1076,33 @@ async def benchmark(
     print("{:<40} {:<10.2f}".format("Mean TTFT (ms):", metrics.mean_ttft_ms))
     print("{:<40} {:<10.2f}".format("Median TTFT (ms):", metrics.median_ttft_ms))
     print("{:<40} {:<10.2f}".format("P99 TTFT (ms):", metrics.p99_ttft_ms))
+    print("{:<40} {:<10.2f}".format("P95 TTFT (ms):", metrics.p95_ttft_ms))
     print(
         "{s:{c}^{n}}".format(s="Time per Output Token (excl. 1st token)", n=50, c="-")
     )
     print("{:<40} {:<10.2f}".format("Mean TPOT (ms):", metrics.mean_tpot_ms))
     print("{:<40} {:<10.2f}".format("Median TPOT (ms):", metrics.median_tpot_ms))
     print("{:<40} {:<10.2f}".format("P99 TPOT (ms):", metrics.p99_tpot_ms))
+    print("{:<40} {:<10.2f}".format("P95 TPOT (ms):", metrics.p95_tpot_ms))
     print("{s:{c}^{n}}".format(s="Inter-token Latency", n=50, c="-"))
     print("{:<40} {:<10.2f}".format("Mean ITL (ms):", metrics.mean_itl_ms))
     print("{:<40} {:<10.2f}".format("Median ITL (ms):", metrics.median_itl_ms))
     print("{:<40} {:<10.2f}".format("P99 ITL (ms):", metrics.p99_itl_ms))
+    print("{:<40} {:<10.2f}".format("P95 ITL (ms):", metrics.p95_itl_ms))
     print("=" * 50)
 
     if (
-        metrics.median_ttft_ms is not None
-        and metrics.mean_itl_ms is not None
-        and metrics.output_throughput is not None
+        metrics.median_ttft_ms is None
+        or metrics.mean_itl_ms is None
+        or metrics.output_throughput is None
     ):
-        result = {
-            "backend": args.backend,
-            "dataset_name": args.dataset_name,
-            "request_rate": request_rate,
-            "max_concurrency": max_concurrency,
-            "total_input_tokens": metrics.total_input,
-            "total_output_tokens": metrics.total_output,
-            "total_output_tokens_retokenized": metrics.total_output_retokenized,
-            "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
-            "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
-            "median_ttft_ms": metrics.median_ttft_ms,
-            "median_itl_ms": metrics.median_itl_ms,
-            "output_throughput": metrics.output_throughput,
-            "sharegpt_output_len": args.sharegpt_output_len,
-            "random_input_len": args.random_input_len,
-            "random_output_len": args.random_output_len,
-            "random_range_ratio": args.random_range_ratio,
-            "duration": benchmark_duration,
-            "completed": metrics.completed,
-        }
-    else:
         print(f"Error running benchmark for request rate: {request_rate}")
         print("-" * 30)
 
-    # Determine output file name
-    if args.output_file:
-        output_file_name = args.output_file
-    else:
-        now = datetime.now().strftime("%m%d")
-        if args.dataset_name == "random":
-            output_file_name = f"{args.backend}_{now}_{args.num_prompts}_{args.random_input_len}_{args.random_output_len}.jsonl"
-        else:
-            output_file_name = f"{args.backend}_{now}_{args.num_prompts}_sharegpt.jsonl"
-
-    # Append results to a JSONL file
-    with open(output_file_name, "a") as file:
-        file.write(json.dumps(result) + "\n")
-
     result = {
+        "backend": args.backend,
+        "dataset_name": args.dataset_name,
+        "request_rate": request_rate,
         "duration": benchmark_duration,
         "completed": metrics.completed,
         "total_input_tokens": metrics.total_input,
@@ -1090,27 +1111,50 @@ async def benchmark(
         "request_throughput": metrics.request_throughput,
         "input_throughput": metrics.input_throughput,
         "output_throughput": metrics.output_throughput,
+        "total_throughput": metrics.total_throughput,
         "mean_ttft_ms": metrics.mean_ttft_ms,
         "median_ttft_ms": metrics.median_ttft_ms,
         "std_ttft_ms": metrics.std_ttft_ms,
         "p99_ttft_ms": metrics.p99_ttft_ms,
+        "p95_ttft_ms": metrics.p95_ttft_ms,
         "mean_tpot_ms": metrics.mean_tpot_ms,
         "median_tpot_ms": metrics.median_tpot_ms,
         "std_tpot_ms": metrics.std_tpot_ms,
         "p99_tpot_ms": metrics.p99_tpot_ms,
+        "p95_tpot_ms": metrics.p95_tpot_ms,
         "mean_itl_ms": metrics.mean_itl_ms,
         "median_itl_ms": metrics.median_itl_ms,
         "std_itl_ms": metrics.std_itl_ms,
         "p99_itl_ms": metrics.p99_itl_ms,
+        "p95_itl_ms": metrics.p95_itl_ms,
+        "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
+        "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
+    }
+
+    # Determine output file name
+    output_file_name = os.path.join(args.output_path, "metrics.jsonl")
+
+    # Append results to a JSONL file
+    with open(output_file_name, "a") as file:
+        file.write(json.dumps(result, indent=4) + "\n")
+
+    # Add detail to the result
+    detail = {
         "input_lens": [output.prompt_len for output in outputs],
         "output_lens": output_lens,
         "ttfts": [output.ttft for output in outputs],
         "itls": [output.itl for output in outputs],
-        "generated_texts": [output.generated_text for output in outputs],
+        # "generated_texts": [output.generated_text for output in outputs],
         "errors": [output.error for output in outputs],
-        "mean_e2e_latency_ms": metrics.mean_e2e_latency_ms,
-        "median_e2e_latency_ms": metrics.median_e2e_latency_ms,
     }
+
+    # Write detail to a JSON file
+    detail_file_name = os.path.join(args.output_path, "detail.jsonl")
+    with open(detail_file_name, "w") as file:
+        file.write(json.dumps(detail, indent=4) + "\n")
+
+    result.update(detail)
+
     return result
 
 
@@ -1229,7 +1273,30 @@ def run_benchmark(args_: argparse.Namespace):
             "Because when the tokenizer counts the output tokens, if there is gibberish, it might count incorrectly.\n"
         )
 
+    # Set output path
+    if not args.output_path:
+        now = datetime.now().strftime("%m%d%H%M%S")
+        if args.dataset_name == "generated-shared-prefix":
+            args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_rate{args.request_rate}"
+        elif args.dataset_name == "dumped":
+            args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_rate{args.request_rate}-{args.dataset_path.split('/')[-2]}"
+        else:
+            args.output_path = f"out/{args.backend}_{now}_{args.dataset_name[:9]}_rate{args.request_rate}"
+        os.makedirs(args.output_path, exist_ok=True)
+
     print(f"{args}\n")
+
+    # Save experiment config
+    server_args = get_server_args(args)
+    print(f"Server args: {server_args}\n")
+    with open(f"{args.output_path}/experiment_config_v2.json", "w") as f:
+        # f.write(json.dumps(server_args, indent=4) + "\n")
+        # f.write(json.dumps(vars(args), indent=4) + "\n")
+        f.write(json.dumps([server_args, vars(args)], indent=4) + "\n")
+
+    # Flush cache before benchmarking
+    if not args.disable_flush_cache:
+        flush_server_cache(args)
 
     # Read dataset
     backend = args.backend
@@ -1239,6 +1306,10 @@ def run_benchmark(args_: argparse.Namespace):
     tokenizer = get_tokenizer(tokenizer_id)
 
     input_requests = get_dataset(args, tokenizer)
+
+    if args.enable_dump_requests:
+        with open(f"{args.output_path}/dumped_requests.json", "w") as f:
+            json.dump(input_requests, f)
 
     if not args.multi:
         return asyncio.run(
@@ -1318,7 +1389,7 @@ if __name__ == "__main__":
         "--dataset-name",
         type=str,
         default="sharegpt",
-        choices=["sharegpt", "random", "generated-shared-prefix"],
+        choices=["sharegpt", "random", "generated-shared-prefix", "dumped"],
         help="Name of the dataset to benchmark on.",
     )
     parser.add_argument(
@@ -1397,7 +1468,7 @@ if __name__ == "__main__":
         default="2,34,2",
         help="Range of request rates in the format start,stop,step. Default is 2,34,2. It also supports a list of request rates, requiring the parameters to not equal three.",
     )
-    parser.add_argument("--output-file", type=str, help="Output JSONL file name.")
+    parser.add_argument("--output-path", type=str, help="Output path.")
     parser.add_argument(
         "--disable-tqdm",
         action="store_true",
@@ -1451,6 +1522,16 @@ if __name__ == "__main__":
         type=int,
         default=256,
         help="Target length in tokens for outputs in generated-shared-prefix dataset",
+    )
+    group.add_argument(
+        "--enable-dump-requests",
+        action="store_true",
+        help="Enable dumping the generated requests to a file.",
+    )
+    group.add_argument(
+        "--disable-flush-cache",
+        action="store_true",
+        help="Disable flushing the cache before benchmarking.",
     )
     parser.add_argument(
         "--profile",
