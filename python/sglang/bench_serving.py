@@ -481,9 +481,9 @@ def get_server_args(args):
     server_args = {}
     if args.backend == "sglang":
         server_url = (
-            f"{args.base_url}/get_server_args"
+            f"{args.base_url}/get_server_info"
             if args.base_url
-            else f"http://{args.host}:{args.port}/get_server_args"
+            else f"http://{args.host}:{args.port}/get_server_info"
         )
 
         try:
@@ -545,7 +545,7 @@ class BenchmarkMetrics:
     median_tpot_ms: float
     std_tpot_ms: float
     p99_tpot_ms: float
-    p95_tpots_ms: float
+    p95_tpot_ms: float
     mean_itl_ms: float
     median_itl_ms: float
     std_itl_ms: float
@@ -913,7 +913,7 @@ def calculate_metrics(
         median_tpot_ms=np.median(tpots or 0) * 1000,
         std_tpot_ms=np.std(tpots or 0) * 1000,
         p99_tpot_ms=np.percentile(tpots or 0, 99) * 1000,
-        p95_tpots_ms=np.percentile(tpots or 0, 95) * 1000,
+        p95_tpot_ms=np.percentile(tpots or 0, 95) * 1000,
         mean_itl_ms=np.mean(itls or 0) * 1000,
         median_itl_ms=np.median(itls or 0) * 1000,
         std_itl_ms=np.std(itls or 0) * 1000,
@@ -1083,7 +1083,7 @@ async def benchmark(
     print("{:<40} {:<10.2f}".format("Mean TPOT (ms):", metrics.mean_tpot_ms))
     print("{:<40} {:<10.2f}".format("Median TPOT (ms):", metrics.median_tpot_ms))
     print("{:<40} {:<10.2f}".format("P99 TPOT (ms):", metrics.p99_tpot_ms))
-    print("{:<40} {:<10.2f}".format("P95 TPOT (ms):", metrics.p95_tpots_ms))
+    print("{:<40} {:<10.2f}".format("P95 TPOT (ms):", metrics.p95_tpot_ms))
     print("{s:{c}^{n}}".format(s="Inter-token Latency", n=50, c="-"))
     print("{:<40} {:<10.2f}".format("Mean ITL (ms):", metrics.mean_itl_ms))
     print("{:<40} {:<10.2f}".format("Median ITL (ms):", metrics.median_itl_ms))
