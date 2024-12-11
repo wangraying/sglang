@@ -14,6 +14,7 @@
 """A scheduler that manages a tensor parallel GPU worker."""
 
 import logging
+import nvtx
 import os
 import signal
 import threading
@@ -374,6 +375,7 @@ class Scheduler:
 
         self.parent_process.send_signal(signal.SIGQUIT)
 
+    @nvtx.annotate(message="event_loop_normal", color="green")
     @torch.no_grad()
     def event_loop_normal(self):
         """A normal scheduler loop."""
@@ -397,6 +399,7 @@ class Scheduler:
 
             self.last_batch = batch
 
+    @nvtx.annotate(message="event_loop_overlap", color="green")
     @torch.no_grad()
     def event_loop_overlap(self):
         """A scheduler loop that overlaps the CPU processing and GPU computation."""
@@ -900,6 +903,7 @@ class Scheduler:
         batch.prepare_for_decode()
         return batch
 
+    @nvtx.annotate(message="run_batch", color="blue")
     def run_batch(self, batch: ScheduleBatch):
         """Run a batch."""
         self.forward_ct += 1
@@ -931,6 +935,7 @@ class Scheduler:
             ret = embeddings, model_worker_batch.bid
         return ret
 
+    @nvtx.annotate(message="process_batch_result", color="yellow")
     def process_batch_result(self, batch: ScheduleBatch, result):
         if batch.forward_mode.is_decode():
             self.process_batch_result_decode(batch, result)
