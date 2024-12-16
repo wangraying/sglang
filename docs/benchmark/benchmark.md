@@ -275,30 +275,30 @@ When mixed-running is disabled, we typically observe an increased input/output t
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-new-seq-wo-mixed-running.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-1000 Dataset"><br>
       (a) Number of New Sequences in Prefilled Batches of Random-1000 Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-1000 Dataset"><br>
       (b) Number of Queued Requests in Prefilled Batches of Random-1000 Dataset
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-new-seq-wo-mixed-running.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
       (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-4000 Dataset"><br>
       (d) Number of Queued Requests in Prefilled Batches of Random-4000 Dataset
   </tr>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-1.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-1.png" alt="Number of Queued Requests in Prefilled Batches of Random-2000 Dataset"><br>
       (e) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (with Prefilled Chunk Size of 256, 512 and 1024)
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-2.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-2.png" alt="Number of Queued Requests in Prefilled Batches of Random-2000 Dataset"><br>
       (f) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (with Prefilled Chunk Size of 2048, 4096, 8192 and 16384)
     </td>
   </tr>
@@ -310,31 +310,23 @@ When mixed-running is disabled, we typically observe an increased input/output t
 
 <table>
   <tr>
-  <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/gen-perf-w-wo-mixed-running.png" alt="Performance on Generated-Shared-Prefix Dataset"><br>
-      (a) Performance on Generated-Shared-Prefix Dataset
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-perf-w-wo-mixed-running-rate4.png" alt="Performance on Random Dataset"><br>
+      (a) Performance on Random Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-perf-w-wo-mixed-running.png" alt="Performance on Random Dataset"><br>
-      (b) Performance on Random Dataset
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-perf-w-wo-mixed-running.png" alt="Performance on Random-1000 Dataset"><br>
-      (c) Performance on Random-1000 Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-perf-w-wo-mixed-running-rate4.png" alt="Performance on Random-1000 Dataset"><br>
+      (b) Performance on Random-1000 Dataset
     </td>
   </tr>
   <tr>
-  <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-perf-w-wo-mixed-running.png" alt="Performance on Random-2000 Dataset"><br>
-      (d) Performance on Random-2000 Dataset
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-perf-w-wo-mixed-running-rate4.png" alt="Performance on Random-2000 Dataset"><br>
+      (c) Performance on Random-2000 Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-perf-w-wo-mixed-running.png" alt="Performance on Random-4000 Dataset"><br>
-      (e) Performance on Random-4000 Dataset
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/sharegpt-perf-w-wo-mixed-running.png" alt="Performance on ShareGPT Dataset"><br>
-      (f) Performance on ShareGPT Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-perf-w-wo-mixed-running-rate4.png" alt="Performance on Random-4000 Dataset"><br>
+      (d) Performance on Random-4000 Dataset
     </td>
   </tr>
 </table>
@@ -344,11 +336,11 @@ When mixed-running is disabled, we typically observe an increased input/output t
 <table>
   <tr>
   <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-w-mixed-running-normalized.png" alt="TTFT Latency (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-w-mixed-running-normalized-rate4.png" alt="TTFT Latency (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
       (a) TTFT Latency  (Normalized) w. Mixed Running with Different Chunk Sizes
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized.png" alt="ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized-rate4.png" alt="ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
       (b) ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes
     </td>
     </tr>
