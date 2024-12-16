@@ -63,67 +63,72 @@ Then, we compare the performance metrics across all the six datasets using diffe
 
 **Output Throughput:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-schedule-policy.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-schedule-policy.png" alt="Output Throughput" style="width:50%; height:auto;"/>
 </p>
 
 **TTFT Latency:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
-</p>
 
-For better visualization, normalize TTFT latency using the first value of each group.
+Figure (a) presents the P99 TTFT latency across various scheduling policies. For better visualization, normalize TTFT latency using the first value of each group. The normalized TTFT latency values are shown in Figure (b).
 
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy-normalized.png" alt="P99 TTFT Latency" style="width:80%; height:auto;"/>
-</p>
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy.png" alt="P99 TTFT for Different Schedule Policies" style="width:120%; height:auto;"><br>
+      (a) P99 TTFT Latency for Different Schedule Policies
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-latency-vs-schedule-policy-normalized.png" alt=" P99 TTFT (Normalized) for Different Schedule Policies" style="width:90%; height:auto;"><br>
+      (b) P99 TTFT Latency (Normalized) for Different Schedule Policies
+    </td>
+  </tr>
+</table>
 
 **ITL Latency:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:80%; height:auto;"/>
-</p>
-
-**Cache Hit Rate:**
-<p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/cache-hit-rate-vs-schedule-policy.png" alt="Cache Hit Rate" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-latency-vs-schedule-policy.png" alt="P99 ITL Latency" style="width:50%; height:auto;"/>
 </p>
 
 ### Observations
 
 1. Random policy almost performs worse across all datasets, in terms of output throughput and TTFT. It is especially worse on
 Generated-Shared-Prefix dataset, since it fails to exploit the characteristic of sharing common prefix among
-consecutive requests in each sequence group, but it still needs to maintain the prefix structure in the radix tree. We added Figures (a) and (b) below to support our observations.
+consecutive requests in each sequence group, but it still needs to maintain the prefix structure in the radix tree. We added Figures (a), (b) and (c) below to support our observations.
 2. LOF policy performs poorly in terms of TTFT on datasets with random length, i.e. Random dataset. This is expected since LOF
-policy offers no guarantee on TTFT. Figure (c) has a better illustration of it.
+policy offers no guarantee on TTFT. Figure (d) has a better illustration of it.
 3. FCFS and LPM policies outperform the others across all the datasets, in terms of output throughput and TTFT.
 4. For ShareGPT dataset, the performance metrics of different schedule policies don't differ much.
-5. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT as the number of input tokens increases for all schedule policies, this is easy to derive. We also observe a trend of decreasing ITL when using FCFS, LOF and LPM policies. See Figures (d) and (e) for more details.
+5. By comparing the results of Random-*n* datasets, we could observe a trend of increasing TTFT as the number of input tokens increases for all schedule policies, this is easy to derive. We also observe a trend of decreasing ITL when using FCFS, LOF and LPM policies. See Figures (e) and (f) for more details.
 
 
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/throughput-on-gen-vs-schedule-policy.png" alt="Throughput on Generated-Shared-Prefix dataset"><br>
-      (a) Throughput on Generated-Shared-Prefix dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/cache-hit-rate-vs-schedule-policy.png" alt="Cache Hit Rate for Different Schedule Policies"><br>
+      (a) Cache Hit Rate for Different Schedule Policies
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-latency-on-gen-vs-schedule-policy.png" alt="TTFT Latency on Generated-Shared-Prefix dataset"><br>
-      (b) TTFT Latency on Generated-Shared-Prefix dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/throughput-on-gen-vs-schedule-policy.png" alt="Throughput on Generated-Shared-Prefix dataset" style="width:120%; height:auto;"><br>
+      (b) Throughput on Generated-Shared-Prefix dataset
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-latency-on-gen-vs-schedule-policy.png" alt="TTFT Latency on Generated-Shared-Prefix dataset" style="width:120%; height:auto;"><br>
+      (c) TTFT Latency on Generated-Shared-Prefix dataset
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-latency-on-random-vs-schedule-policy.png" alt="TTFT Latency on Random dataset"><br>
-      (c) TTFT Latency on Random dataset
+      (d) TTFT Latency on Random dataset
     </td>
   </tr>
-</table>
-<table>
   <tr>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-for-random-n-vs-schedule-policy.png" alt="TTFT Latency on Random-n dataset"><br>
-      (d) TTFT Latency on Random-n dataset
+      (e) TTFT Latency on Random-n dataset
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-for-random-n-vs-schedule-policy.png" alt="ITL Latency on Random-n dataset"><br>
-      (e) ITL Latency on Random-n dataset
+      (f) ITL Latency on Random-n dataset
     </td>
   </tr>
 </table>
@@ -140,7 +145,7 @@ policy offers no guarantee on TTFT. Figure (c) has a better illustration of it.
 
 **Output Throughput:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-w-wo-cache.png" alt="Output Throughput" style="width:50%; height:auto;"/>
 </p>
 
 **Latency:**
@@ -201,7 +206,7 @@ is disabled, is sufficient to achieve good performance.
 
 **Output Throughput:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-cache-size.png" alt="Output Throughput" style="width:80%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-cache-size.png" alt="Output Throughput" style="width:50%; height:auto;"/>
 </p>
 
 **Latency:**
@@ -226,7 +231,7 @@ is disabled, is sufficient to achieve good performance.
 
 Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing the batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets which have relatively shorter sequence lengths, these performance gains saturate after the cache size exceeds 64K.
 
-## Performance with Chunked Prefills
+## Performance with Chunked Prefills and Mixed-Running
 
 ### Experiment Settings
 
@@ -236,7 +241,7 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
 
-### With Mixed-Running Disabled
+### Chunked Prefills w.o. Mixed-Running
 
 **Throughput:**
 
@@ -304,9 +309,7 @@ When mixed-running is disabled, we typically observe an increased input/output t
   </tr>
 </table>
 
-### With Mixed-Running Enabled
-
-#### Impact of Enabling Mixed-Running
+### Impact of Mixed-Running
 
 <table>
   <tr>
@@ -331,7 +334,9 @@ When mixed-running is disabled, we typically observe an increased input/output t
   </tr>
 </table>
 
-#### Varying Chunk Sizes
+#### Observations
+
+### Mixed-Running with Varying Chunk Sizes
 
 <table>
   <tr>
@@ -346,7 +351,9 @@ When mixed-running is disabled, we typically observe an increased input/output t
     </tr>
 </table>
 
-#### Varying Output Lengths
+#### Observations
+
+### Mixed-Running with Varying Output Lengths
 
 We also studied the performance across three datasets (including two newly created ones: Random-2000-400 and Random-2000-800), each with a consistent input length of 2000 and different output lengths of 200, 400, and 800, respectively. The corresponding output throughput and TTFT latency are detailed below:
 
