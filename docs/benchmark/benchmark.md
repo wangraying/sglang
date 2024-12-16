@@ -230,8 +230,9 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 
 ### Experiment Settings
 
-- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
-- Vary the prefill chunk sizes among 256, 512, 1024, 2048 and 8192.
+- The maximum number of tokens (corresponding to the cache size) is set to 128K.
+- Reduce the request rate to 4 in order to avoid extensive queuing and reduce the number of total requests in this experiment correspondingly.
+- Vary the prefill chunk sizes among 256, 512, 1024, 2048, 4096, 8192 and 16384.
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
 
@@ -242,11 +243,11 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 <table>
   <tr>
   <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/input-throughput-vs-chunk-size-wo-mixed-running-line-chart.png" alt="Input Throughput v.o. Mixed-Running"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/input-throughput-vs-chunk-size-wo-mixed-running-rate4.png" alt="Input Throughput v.o. Mixed-Running"><br>
       (a) Input Throughput w.o. Mixed-Running
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-chunk-size-wo-mixed-running-line-chart.png" alt="Output Throughput v.o. Mixed-Running"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-chunk-size-wo-mixed-running-rate4.png" alt="Output Throughput v.o. Mixed-Running"><br>
       (b) Output Throughput w.o. Mixed-Running
     </td>
   </tr>
@@ -257,11 +258,11 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 <table>
   <tr>
   <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-wo-mixed-running-normalized.png" alt="P99 TTFT Latency w.o. Mixed-Running"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-wo-mixed-running-normalized-rate4.png" alt="P99 TTFT Latency w.o. Mixed-Running"><br>
       (c) P99 TTFT Latency w.o. Mixed-Running
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-wo-mixed-running-normalized.png" alt="P99 ITL Latency w.o. Mixed-Running"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-wo-mixed-running-normalized-rate4.png" alt="P99 ITL Latency w.o. Mixed-Running"><br>
       (d) P99 ITL Latency w.o. Mixed-Running
     </td>
   </tr>
@@ -270,6 +271,38 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
 #### Observations
 
 When mixed-running is disabled, we typically observe an increased input/output throughput and a decreased TTFT latency as the chunked prefill size increases. This is expected due to the higher prefill efficiency of larger prefills. The impact on ITL latency is not that obvious, as it varies with the characteristics of the datasets.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-new-seq-wo-mixed-running.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (a) Number of New Sequences in Prefilled Batches of Random-1000 Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (b) Number of Queued Requests in Prefilled Batches of Random-1000 Dataset
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-new-seq-wo-mixed-running.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (d) Number of Queued Requests in Prefilled Batches of Random-4000 Dataset
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-1.png" alt="Output Throughput (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (e) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (with Prefilled Chunk Size of 256, 512 and 1024)
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-2.png" alt="P99 TTFT Latency (Normalized) w./w.o Cache with Chunked Prefills"><br>
+      (f) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (with Prefilled Chunk Size of 2048, 4096, 8192 and 16384)
+    </td>
+  </tr>
+</table>
 
 ### With Mixed-Running Enabled
 
