@@ -36,6 +36,10 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
+from sglang.srt.server_args import ServerArgs
+from sglang.bench_server_latency import launch_server_process, kill_child_process
+
+
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 
 global args
@@ -448,7 +452,7 @@ def get_dataset(args, tokenizer):
         )
     # support reading dataset from dumped json file
     elif args.dataset_name == "dumped":
-        input_requests = load_dumped_requests(args.dataset_path)
+        input_requests = load_dumped_requests(args.dataset_path, args.num_prompts)
     else:
         raise ValueError(f"Unknown dataset: {args.dataset_name}")
     return input_requests
@@ -786,10 +790,16 @@ def sample_generated_shared_prefix_requests(
     return input_requests
 
 
-def load_dumped_requests(dataset_path: str) -> List[Tuple[str, int, int]]:
+def load_dumped_requests(dataset_path: str, num_prompts: int) -> List[Tuple[str, int, int]]:
     with open(dataset_path) as f:
         dataset = json.load(f)
-    return dataset
+
+    if num_prompts > len(dataset):
+        raise ValueError(
+            f"Requested number of prompts ({num_prompts}) exceeds the number of prompts in the dataset ({len(dataset)})"
+        )
+
+    return dataset[:num_prompts]
 
 
 async def get_request(
@@ -1297,14 +1307,6 @@ if __name__ == "__main__":
         help="Server or API base url if not using http host and port.",
     )
     parser.add_argument(
-        "--host", type=str, default="0.0.0.0", help="Default host is 0.0.0.0."
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        help="If not set, the default port is configured according to its default value for different LLM Inference Engines.",
-    )
-    parser.add_argument(
         "--dataset-name",
         type=str,
         default="sharegpt",
@@ -1397,6 +1399,21 @@ if __name__ == "__main__":
         help="Append given JSON object to the request payload. You can use this to specify"
         "additional generate params like sampling params.",
     )
+    parser.add_argument(
+        "--enable-dump-requests",
+        action="store_true",
+        help="Enable dumping the generated requests to a file.",
+    )
+    parser.add_argument(
+        "--disable-flush-cache",
+        action="store_true",
+        help="Disable flushing the cache before benchmarking.",
+    )
+    parser.add_argument(
+        "--bootstrap",
+        action="store_true",
+        help="bootstrap the server before benchmarking.",
+    )
 
     group = parser.add_argument_group("generated-shared-prefix dataset arguments")
     group.add_argument(
@@ -1429,16 +1446,18 @@ if __name__ == "__main__":
         default=256,
         help="Target length in tokens for outputs in generated-shared-prefix dataset",
     )
-    group.add_argument(
-        "--enable-dump-requests",
-        action="store_true",
-        help="Enable dumping the generated requests to a file.",
-    )
-    group.add_argument(
-        "--disable-flush-cache",
-        action="store_true",
-        help="Disable flushing the cache before benchmarking.",
-    )
 
+    server_args = ServerArgs.add_cli_args(parser)
     args = parser.parse_args()
-    run_benchmark(args)
+
+    if args.bootstrap:
+        assert args.base_url is None
+        assert args.backend == "sglang"
+        server_args = ServerArgs.from_cli_args(args)
+        proc, args.base_url = launch_server_process(server_args)
+
+    try:
+        run_benchmark(args)
+    finally:
+        if proc:
+            kill_child_process(proc.pid, include_self=True)
