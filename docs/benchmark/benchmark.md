@@ -41,7 +41,7 @@ The three primary metrics of interest are:
 - The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
 - Vary the schedule policies among LPM (Longest-Prefix-Match), FCFS (First-Come-First-Serve), DFS-Weight, Random, and LOF (Longest-Output-First).
 - Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
-- Throughout our experiments, we studied a data parallel (dp) size of 1 and a tensor parallel (tp) size of 1, following the default setting. We will not reiterate it in the subsequent sections.
+- We adopt a data parallel (dp) size of 1 and a tensor parallel (tp) size of 1 throughout our experiments, following the default setting. We will not reiterate it in the subsequent sections.
 
 ### Performance
 
@@ -383,6 +383,8 @@ The impact to ITL is not obvious, and it varies varies with the characteristics 
 
 #### Observations
 
+By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across different datasets with the exception of the Random-4000 dataset.
+
 ### Mixed-Running with Varying Chunk Sizes
 
 <table>
@@ -400,30 +402,6 @@ The impact to ITL is not obvious, and it varies varies with the characteristics 
 
 #### Observations
 
-### Mixed-Running with Varying Output Lengths
-
-We also studied the performance across three datasets (including two newly created ones: Random-2000-400 and Random-2000-800), each with a consistent input length of 2000 and different output lengths of 200, 400, and 800, respectively. The corresponding output throughput and TTFT latency are detailed below:
-
-<table>
-  <tr>
-  <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-output-length-w-mixed-running.png" alt="Output Throughput on Datasets with Different Output Lengths"><br>
-      (a) Output Throughput on Datasets with Different Output Lengths
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-output-length-w-mixed-running.png" alt="TTFT Latency on Datasets with Different Output Lengths"><br>
-      (b) TTFT Latency on Datasets with Different Output Lengths
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-output-length-w-mixed-running.png" alt="ITL Latency on Datasets with Different Output Lengths"><br>
-      (b) ITL Latency on Datasets with Different Output Lengths
-    </td>
-  </tr>
-</table>
-
-#### Observations
-
-1. By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across most datasets.
-2. When mixed-running is enabled, We also observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
-3. The impact to TTFT latency is not that obvious. For datasets with shorter contex lengths, such as Random-1000 and ShareGPT, a larger chunked prefill size is preferred.
-4. The overall impact varies with the characteristics of the datasets and the parallelism strategies. The optimal setting may need more sophisticated methods for exploration and exploitation. But for tp size of 1, as it is the case in our experiments, setting chunked prefill size to 512 with mixed-running enabled seems to be a good point to start with.
+1. When mixed-running is enabled, We observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
+2. The impact to TTFT latency isn't quite direct. However, a trend similar to the one with mixed-running disabled is observed.
+3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. To meet stringent TTFT requirements, too small chunk sizes should be avoided to prevent excessive chunking. Too large chunk sizes are also inadvisable as they can trade latency for throughput when using large batch sizes. Mixed-running is preferred in order to improve throughput and ITL, but it may potentially hurt TTFT.
