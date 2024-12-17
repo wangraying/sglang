@@ -271,10 +271,10 @@ For the ShareGPT dataset, we observe somewhat atypical. When the `max_total_toke
 ### Experiment Settings
 
 - The maximum number of tokens (corresponding to the cache size) is set to 128K.
-- Reduce the request rate to 4 in order to avoid extensive queuing and reduce the number of total requests in this experiment correspondingly.
 - Vary the prefill chunk sizes among 256, 512, 1024, 2048, 4096, 8192 and 16384.
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
+- We reduce the request rate to 4 in this experiment in order to avoid extensive queuing and reduce the number of total requests correspondingly.
 
 ### Chunked Prefills w.o. Mixed-Running
 
@@ -310,7 +310,7 @@ For the ShareGPT dataset, we observe somewhat atypical. When the `max_total_toke
 
 #### Observations
 
-When mixed-running is disabled, we typically observe an increased input/output throughput and a decreased TTFT latency as the chunked prefill size increases. This is expected due to the higher prefill efficiency of larger prefills. The impact on ITL latency is not that obvious, as it varies with the characteristics of the datasets.
+Typically for smaller chunk sizes, there tend to be a higher TTFT latency due to excessive chunking. This observation could be verified by comparing the number of prefill batches to the original total request count (500) as depicted in Figures (a), (b), and (c).
 
 <table>
   <tr>
@@ -319,30 +319,42 @@ When mixed-running is disabled, we typically observe an increased input/output t
       (a) Number of New Sequences in Prefilled Batches of Random-1000 Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-1000 Dataset"><br>
-      (b) Number of Queued Requests in Prefilled Batches of Random-1000 Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
+      (b) Number of New Sequences in Prefilled Batches of Random-2000 Dataset
     </td>
-  </tr>
-  <tr>
-    <td align="center">
+     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
       (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset
     </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-4000 Dataset"><br>
-      (d) Number of Queued Requests in Prefilled Batches of Random-4000 Dataset
   </tr>
+</table>
+
+The impact to TTFT differs across the dataset as the chunked prefill size increases. At an appropriate request rate, there is a threshold for chunk size beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is 1024, while for Random-2000, it is 2048. From Figure (d) and (f), we could also observe that the number of requests is relatively low at these threshold points.
+
+For the Random-4000 dataset, the situation is slightly different; we observe a continued decrease in TTFT as the prefilled chunk size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improve prefill efficiency. We include Figure (c) and (g) to support our analysis.
+
+<table>
   <tr>
     <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-1000 Dataset"><br>
+      (d) Number of Queued Requests in Prefilled Batches of Random-1000 Dataset
+    </td>
+    <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-1.png" alt="Number of Queued Requests in Prefilled Batches of Random-2000 Dataset"><br>
-      (e) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (with Prefilled Chunk Size of 256, 512 and 1024)
+      (e) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (Smaller Chunk Size)
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-2.png" alt="Number of Queued Requests in Prefilled Batches of Random-2000 Dataset"><br>
-      (f) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (with Prefilled Chunk Size of 2048, 4096, 8192 and 16384)
+      (f) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (Larger Chunk Size)
     </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-4000 Dataset"><br>
+      (g) Number of Queued Requests in Prefilled Batches of Random-4000 Dataset
+    </td> 
   </tr>
 </table>
+
+The impact to ITL is not obvious, and it varies varies with the characteristics of the datasets. The impact to throughput parallels our observations for TTFT.
 
 ### Impact of Mixed-Running
 
