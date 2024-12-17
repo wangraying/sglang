@@ -198,31 +198,27 @@ is disabled, is sufficient to achieve good performance.
 ### Experiment Settings
 
 - The request rate is fixed at 16.
-- The chunked prefill size is set to 512, with mixed-running enabled.
 - Vary the maximum number of tokens among 32K, 64K, and 128K.
-- Default values are used for all other parameters, and LPM policy is used for scheduling.
+- FCFS policy is used for scheduling.
+- Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
 
 ### Performance
 
 **Output Throughput:**
 <p align="center">
-<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/output-throughput-vs-cache-size.png" alt="Output Throughput" style="width:50%; height:auto;"/>
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-output-throughput-vs-cache-size.png" alt="Output Throughput" style="width:50%; height:auto;"/>
 </p>
 
 **Latency:**
 <table>
   <tr>
-  <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/mean-e2e-latency-vs-cache-size-normalized.png" alt="Mean End-to-End Latency under Different Cache Sizes"><br>
-      (a) Mean End-to-End Latency (Normalized) under Different Cache Sizes
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-ttft-vs-cache-size-line-chart.png" alt="P99 TTFT Latency under Different Cache Sizes"><br>
+      (a) P99 TTFT Latency under Different Cache Sizes
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-ttft-vs-cache-size-line-chart.png" alt="P99 TTFT Latency under Different Cache Sizes"><br>
-      (b) P99 TTFT Latency under Different Cache Sizes
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/p99-itl-vs-cache-size-line-chart.png" alt="P99 ITL Latency under Different Cache Sizes"><br>
-      (c) P99 ITL Latency under Different Cache Sizes
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-p99-itl-vs-cache-size-line-chart.png" alt="P99 ITL Latency under Different Cache Sizes"><br>
+      (b) P99 ITL Latency under Different Cache Sizes
     </td>
   </tr>
 </table>
@@ -230,6 +226,39 @@ is disabled, is sufficient to achieve good performance.
 ### Observations
 
 Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing the batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets which have relatively shorter sequence lengths, these performance gains saturate after the cache size exceeds 64K.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-2000-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of Random-2000 Dataset"><br>
+      (a) Number of New Sequences in Prefilled Batches of Random-2000 Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-2000-running-req-vs-cache-size.png" alt="Number of Running Requests of Random-2000 Dataset"><br>
+      (b) Number of Running Requests of Random-2000 Dataset
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-4000-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
+      (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-4000-running-req-vs-cache-size.png" alt="Number of Running Requests of Random-4000 Dataset"><br>
+      (d) Number of Running Requests of Random-4000 Dataset
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-sharegpt-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of ShareGPT Dataset"><br>
+      (e) Number of New Sequences in Prefilled Batches of ShareGPT Dataset
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-sharegpt-running-req-vs-cache-size.png" alt="Number of Running Requests of ShareGPT Dataset"><br>
+      (f) Number of Running Requests of ShareGPT Dataset
+    </td>
+  </tr>
+</table>
 
 ## Performance with Chunked Prefills and Mixed-Running
 
