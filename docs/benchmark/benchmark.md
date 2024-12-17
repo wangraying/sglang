@@ -231,7 +231,7 @@ For our experiments, we set a prefilled chunk size of 8192. Before reaching the 
 
 For the Random-2000 and Random-4000 datasets, we noted that when the cache size is doubled, the number of running requests nearly doubles as well, as depicted in Figures (b) and (d). This could explain the observed increase in throughput and reduction in ITL latency, given the improved decoding efficiency associated with larger cache sizes.
 
-For the ShareGPT dataset, we observe somewhat atypical. When the `max_total_tokens` exceeds 64K, the performance gains saturates. Beyond this threshold, there is a significant decrease in the number of queuing requests, while the number of running requests remains almost the same, indicating the performance is bounded by the request rate of the client. These findings are shown in Figures (e) and (f).
+For the ShareGPT dataset, the situation is slightly different. When the `max_total_tokens` exceeds 64K, both throughput and latency reach a plateau. Beyond this threshold, there is a significant decrease in the number of queuing requests , while the number of running requests remains nearly the same, indicating the performance is bottlenecked by the request rate of the client.These findings are shown in Figures (e) and (f).
 
 <table>
   <tr>
@@ -310,7 +310,7 @@ For the ShareGPT dataset, we observe somewhat atypical. When the `max_total_toke
 
 #### Observations
 
-Typically for smaller chunk sizes, there tend to be a higher TTFT latency due to excessive chunking. This observation could be verified by comparing the number of prefill batches to the original total request count (500) as depicted in Figures (a), (b), and (c).
+Typically for very small chunk sizes, there tend to be a high TTFT latency due to excessive chunking. This observation could be verified by comparing the number of prefill batches, as illustrated in Figures (a), (b), and (c) with the original total request count of 500.
 
 <table>
   <tr>
@@ -329,9 +329,9 @@ Typically for smaller chunk sizes, there tend to be a higher TTFT latency due to
   </tr>
 </table>
 
-The impact to TTFT differs across the dataset as the chunked prefill size increases. At an appropriate request rate, there is a threshold for chunk size beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is 1024, while for Random-2000, it is 2048. From Figure (d) and (f), we could also observe that the number of requests is relatively low at these threshold points.
+The impact to TTFT differs across the datasets as the chunked prefill size increases. At an appropriate request rate, there is a chunk size threshold beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is at a chunk size of 1024, while for Random-2000, it is 2048. Figure (d) and (f) show that the number of requests is relatively low at these threshold points.
 
-For the Random-4000 dataset, the situation is slightly different; we observe a continued decrease in TTFT as the prefilled chunk size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improve prefill efficiency. We include Figure (c) and (g) to support our analysis.
+For the Random-4000 dataset, the situation is slightly different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences as shown in Figure (g). An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency.
 
 <table>
   <tr>
@@ -354,7 +354,7 @@ For the Random-4000 dataset, the situation is slightly different; we observe a c
   </tr>
 </table>
 
-The impact to ITL is not obvious, and it varies varies with the characteristics of the datasets. The impact to throughput parallels our observations for TTFT.
+The impact to ITL is not obvious, and it varies varies with the characteristics of the datasets. The impact to throughput parallels our observations for TTFT; with the exception of the Random-1000 dataset, all chunk sizes yield comparable throughput at this request rate.
 
 ### Impact of Mixed-Running
 
