@@ -225,12 +225,18 @@ is disabled, is sufficient to achieve good performance.
 
 ### Observations
 
-Since the size of the radix cache is determined by the `max_num_tokens` parameter of the server, increasing the cache size means increasing the batch size, which almost always leads to a higher throughput and reduced latencies. However, for the Random-1000 and ShareGPT datasets which have relatively shorter sequence lengths, these performance gains saturate after the cache size exceeds 64K.
+The size of radix cache is determined by the `max_total_tokens` parameter of the server. In our experiment, we observed higher throughput and reduced latencies as the cache size increased. This is expected, since `max_total_tokens` limits both the number of requests in a prefill batch and the number of running requests. 
+
+For our experiments, we set a prefilled chunk size of 8192. Before reaching the `max_total_tokens` limit, the number of prefill tokens/requests can be constrained by the prefilled chunk size. This explains why we observed a similar number of requests in prefill batches for different cache sizes across all datasets. However, a larger cache size tends to result in fewer chunking requests, particularly when there is a high number of running requests. This also explains the reduced TTFT latency observed with larger cache sizes. We added Figure (a) and (c) to support our analysis.
+
+For the Random-2000 and Random-4000 datasets, we noted that when the cache size is doubled, the number of running requests nearly doubles as well, as depicted in Figures (b) and (d). This could explain the observed increase in throughput and reduction in ITL latency, given the improved decoding efficiency associated with larger cache sizes.
+
+For the ShareGPT dataset, we observe somewhat atypical. When the `max_total_tokens` exceeds 64K, the performance gains saturates. Beyond this threshold, there is a significant decrease in the number of queuing requests, while the number of running requests remains almost the same, indicating the performance is bounded by the request rate of the client. These findings are shown in Figures (e) and (f).
 
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-2000-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of Random-2000 Dataset"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-2000-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of Random-2000 Dataset" style="width:65%; height:auto;"><br>
       (a) Number of New Sequences in Prefilled Batches of Random-2000 Dataset
     </td>
     <td align="center">
@@ -240,8 +246,8 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
   </tr>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-4000-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
-      (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-4000-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset" style="width:65%; height:auto;"><br>
+      (c) Number of Sequences in Prefilled Batches of Random-4000 Dataset
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-random-4000-running-req-vs-cache-size.png" alt="Number of Running Requests of Random-4000 Dataset"><br>
@@ -250,8 +256,8 @@ Since the size of the radix cache is determined by the `max_num_tokens` paramete
   </tr>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-sharegpt-new-seq-vs-cache-size.png" alt="Number of New Sequences in Prefilled Batches of ShareGPT Dataset"><br>
-      (e) Number of New Sequences in Prefilled Batches of ShareGPT Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-sharegpt-queue-req-vs-cache-size.png" alt="Number of Queued Requests of ShareGPT Dataset" style="width:65%; height:auto;"><br>
+      (e) Number of Queued Requests of ShareGPT Dataset
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/fcfs-sharegpt-running-req-vs-cache-size.png" alt="Number of Running Requests of ShareGPT Dataset"><br>
