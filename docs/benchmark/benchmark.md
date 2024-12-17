@@ -38,7 +38,7 @@ The three primary metrics of interest are:
 
 ### Experiment Settings
 
-- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
+- The maximum number of tokens is set to 128K, and the request rate is fixed at 16.
 - Vary the schedule policies among LPM (Longest-Prefix-Match), FCFS (First-Come-First-Serve), DFS-Weight, Random, and LOF (Longest-Output-First).
 - Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
 - We adopt a data parallel (dp) size of 1 and a tensor parallel (tp) size of 1 throughout our experiments, following the default setting. We will not reiterate it in the subsequent sections.
@@ -137,7 +137,7 @@ policy offers no guarantee on TTFT. Figure (d) has a better illustration of it.
 
 ### Experiment Settings
 
-- The maximum number of tokens (corresponding to the cache size) is set to 128K, and the request rate is fixed at 16.
+- The maximum number of tokens is set to 128K, and the request rate is fixed at 16.
 - When the radix cache is disabled, LPM and DFS-Weight policies are equivalent to FCFS policy. Therefore, we only compare FCFS, LOF and Random policies in this experiment.
 - Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
 
@@ -198,9 +198,9 @@ is disabled, is sufficient to achieve good performance.
 ### Experiment Settings
 
 - The request rate is fixed at 16.
-- Vary the maximum number of tokens among 32K, 64K, and 128K.
+- Vary the maximum number of tokens (corresponding to the cache size) among 32K, 64K, and 128K.
 - FCFS policy is used for scheduling.
-- Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is not enabled.
+- Default values are used for all other parameters, such as the chunked prefill size is fixed to 8192 and mixed-running is **not** enabled.
 
 ### Performance
 
@@ -231,7 +231,8 @@ For our experiments, we set a prefilled chunk size of 8192. Before reaching the 
 
 For the Random-2000 and Random-4000 datasets, we noted that when the cache size is doubled, the number of running requests nearly doubles as well, as depicted in Figures (b) and (d). This could explain the observed increase in throughput and reduction in ITL latency, given the improved decoding efficiency associated with larger cache sizes.
 
-For the ShareGPT dataset, the situation is slightly different. When the `max_total_tokens` exceeds 64K, both throughput and latency reach a plateau. Beyond this threshold, there is a significant decrease in the number of queuing requests , while the number of running requests remains nearly the same, indicating the performance is bottlenecked by the request rate of the client.These findings are shown in Figures (e) and (f).
+For the ShareGPT dataset, the situation is slightly different. When the `max_total_tokens` exceeds 64K, both throughput and latency reach a plateau.
+Upon reaching this point, we noticed a significant decrease in the number of queuing requests, while the number of running requests remains almost the same, indicating the performance is bottlenecked by the request rate of the client.These findings are shown in Figures (e) and (f).
 
 <table>
   <tr>
@@ -270,11 +271,11 @@ For the ShareGPT dataset, the situation is slightly different. When the `max_tot
 
 ### Experiment Settings
 
-- The maximum number of tokens (corresponding to the cache size) is set to 128K.
+- The maximum number of tokens is set to 128K.
 - Vary the prefill chunk sizes among 256, 512, 1024, 2048, 4096, 8192 and 16384.
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
-- We reduce the request rate to 4 in this experiment in order to avoid extensive queuing and reduce the number of total requests correspondingly.
+- We reduce the request rate to 4 in this experiment in order to avoid excessive queuing and reduce the number of total requests correspondingly.
 
 ### Chunked Prefills w.o. Mixed-Running
 
@@ -310,7 +311,7 @@ For the ShareGPT dataset, the situation is slightly different. When the `max_tot
 
 #### Observations
 
-Typically for very small chunk sizes, there tend to be a high TTFT latency due to excessive chunking. This observation could be verified by comparing the number of prefill batches, as illustrated in Figures (a), (b), and (c) with the original total request count of 500.
+Typically for very small chunk sizes, there tend to be a high TTFT latency due to excessive chunking. This observation could be verified by comparing the number of prefill batches, as shown in Figures (a), (b), and (c) with the original total request count of 500.
 
 <table>
   <tr>
@@ -319,42 +320,50 @@ Typically for very small chunk sizes, there tend to be a high TTFT latency due t
       (a) Number of New Sequences in Prefilled Batches of Random-1000 Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-2000 Dataset"><br>
       (b) Number of New Sequences in Prefilled Batches of Random-2000 Dataset
     </td>
+  </tr>
+  <tr>
      <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-new-seq-wo-mixed-running.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
-      (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset
+      (c) Number of New Sequences in Prefilled Batches of Random-4000 Dataset (Small Chunk Sizes)
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-new-seq-wo-mixed-running-2.png" alt="Number of New Sequences in Prefilled Batches of Random-4000 Dataset"><br>
+      (d) Number of New Sequences in Prefilled Batches of Random-4000 Dataset (Large Chunk Sizes)
     </td>
   </tr>
 </table>
 
-The impact to TTFT differs across the datasets as the chunked prefill size increases. At an appropriate request rate, there is a chunk size threshold beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is at a chunk size of 1024, while for Random-2000, it is 2048. Figure (d) and (f) show that the number of requests is relatively low at these threshold points.
+The impact to TTFT differs across the datasets as the chunked prefill size increases. At an appropriate request rate, there is a chunk size threshold beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is at a chunk size of 1024, while for Random-2000, it is 2048. Figures (e) and (h) also demonstrate that the number of requests is relatively low at these threshold points.
 
-For the Random-4000 dataset, the situation is slightly different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences as shown in Figure (g). An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency.
+For the Random-4000 dataset, the situation is slightly different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency. We include Figures (d) and (f) to support our analysis.
 
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-1000 Dataset"><br>
-      (d) Number of Queued Requests in Prefilled Batches of Random-1000 Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-1000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests of Random-1000 Dataset"><br>
+      (e) Number of Queued Requests of Random-1000 Dataset
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-1.png" alt="Number of Queued Requests in Prefilled Batches of Random-2000 Dataset"><br>
-      (e) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (Smaller Chunk Size)
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests of Random-4000 Dataset"><br>
+      (f) Number of Queued Requests of Random-4000 Dataset
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-1.png" alt="Number of Queued Requests of Random-2000 Dataset"><br>
+      (g) Number of Queued Requests of Random-2000 Dataset (Small Chunk Sizes)
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-2.png" alt="Number of Queued Requests in Prefilled Batches of Random-2000 Dataset"><br>
-      (f) Number of Queued Requests in Prefilled Batches of Random-2000 Dataset (Larger Chunk Size)
-    </td>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-wo-mixed-running.png" alt="Number of Queued Requests in Prefilled Batches of Random-4000 Dataset"><br>
-      (g) Number of Queued Requests in Prefilled Batches of Random-4000 Dataset
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-2000-prefill-queue-req-wo-mixed-running-2.png" alt="Number of Queued Requests of Random-2000 Dataset"><br>
+      (h) Number of Queued Requests of Random-2000 Dataset (Large Chunk Sizes)
     </td> 
   </tr>
 </table>
 
-The impact to ITL is not obvious, and it varies varies with the characteristics of the datasets. The impact to throughput parallels our observations for TTFT; with the exception of the Random-1000 dataset, all chunk sizes yield comparable throughput at this request rate.
+The impact to ITL is not obvious, and it varies with the characteristics of the datasets. The impact to throughput parallels our observations for TTFT; with the exception of the Random-1000 dataset, all chunk sizes yield comparable throughput at this request rate.
 
 ### Impact of Mixed-Running
 
@@ -391,11 +400,11 @@ By comparing the performance with mixed-running both enabled and disabled, we ob
   <tr>
   <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/ttft-vs-chunk-size-w-mixed-running-normalized-rate4.png" alt="TTFT Latency (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
-      (a) TTFT Latency  (Normalized) w. Mixed Running with Different Chunk Sizes
+      (a) TTFT Latency (Normalized) w. Mixed Running with Different Chunk Sizes
     </td>
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/itl-vs-chunk-size-w-mixed-running-normalized-rate4.png" alt="ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes"><br>
-      (b) ITL Latency  (Normalized) w. Mixed Running with Different Chunk Sizes
+      (b) ITL Latency (Normalized) w. Mixed Running with Different Chunk Sizes
     </td>
     </tr>
 </table>
