@@ -338,7 +338,7 @@ Typically for very small chunk sizes, there tend to be a high TTFT latency due t
 
 The impact to TTFT differs across the datasets as the chunked prefill size increases. At an appropriate request rate, there is a chunk size threshold beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is at a chunk size of 1024, while for Random-2000, it is 2048. Figures (e) and (h) also demonstrate that the number of requests is relatively low at these threshold points.
 
-For the Random-4000 dataset, the situation is  different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency. We include Figures (d) and (f) to support our analysis.
+For the Random-4000 dataset, the situation is different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency. We include Figures (d) and (f) to support our analysis.
 
 <table>
   <tr>
@@ -389,14 +389,11 @@ The impact to ITL is not obvious, and it varies with the characteristics of the 
     </td>
   </tr>
 </table>
-<table>
-  <tr>
-    <td align="center">
-      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-ttft-w-wo-mixed-running-rate4.png" alt="P99 TTFT on Random-4000 Dataset" style="width:50%; height:auto;"><br>
-      (f) P99 TTFT on Random-4000 Dataset
-    </td>
-  </tr>
-</table>
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-ttft-w-wo-mixed-running-rate4.png" alt="P99 TTFT on Random-4000 Dataset" style="width:50%; height:auto;"/><br>
+(f) P99 TTFT on Random-4000 Dataset
+</p>
 
 #### Observations
 
