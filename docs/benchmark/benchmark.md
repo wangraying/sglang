@@ -232,7 +232,7 @@ For our experiments, we set a prefilled chunk size of 8192. Before reaching the 
 For the Random-2000 and Random-4000 datasets, we noted that when the cache size is doubled, the number of running requests nearly doubles as well, as depicted in Figures (b) and (d). This could explain the observed increase in throughput and reduction in ITL latency, given the improved decoding efficiency associated with larger cache sizes.
 
 For the ShareGPT dataset, the situation is slightly different. When the `max_total_tokens` exceeds 64K, both throughput and latency reach a plateau.
-Upon reaching this point, we noticed a significant decrease in the number of queuing requests, while the number of running requests remains almost the same, indicating the performance is bottlenecked by the request rate of the client.These findings are shown in Figures (e) and (f).
+Upon reaching this point, we noticed a significant decrease in the number of queued requests, while the number of running requests remains almost the same, indicating the performance is bottlenecked by the request rate of the client. These findings are shown in Figures (e) and (f).
 
 <table>
   <tr>
@@ -275,7 +275,7 @@ Upon reaching this point, we noticed a significant decrease in the number of que
 - Vary the prefill chunk sizes among 256, 512, 1024, 2048, 4096, 8192 and 16384.
 - FCFS policy is used for scheduling.
 - Default values are used for all other parameters, and radix cache is enabled by default.
-- We reduce the request rate to 4 in this experiment in order to avoid excessive queuing and reduce the number of total requests correspondingly.
+- We reduce the request rate to 4 in this experiment in order to avoid excessive queuing and reduce the number of total requests to 500 correspondingly.
 
 ### Chunked Prefills w.o. Mixed-Running
 
@@ -338,7 +338,7 @@ Typically for very small chunk sizes, there tend to be a high TTFT latency due t
 
 The impact to TTFT differs across the datasets as the chunked prefill size increases. At an appropriate request rate, there is a chunk size threshold beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is at a chunk size of 1024, while for Random-2000, it is 2048. Figures (e) and (h) also demonstrate that the number of requests is relatively low at these threshold points.
 
-For the Random-4000 dataset, the situation is slightly different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency. We include Figures (d) and (f) to support our analysis.
+For the Random-4000 dataset, the situation is  different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency. We include Figures (d) and (f) to support our analysis.
 
 <table>
   <tr>
@@ -389,10 +389,35 @@ The impact to ITL is not obvious, and it varies with the characteristics of the 
     </td>
   </tr>
 </table>
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-ttft-w-wo-mixed-running-rate4.png" alt="P99 TTFT on Random-4000 Dataset" style="width:50%; height:auto;"><br>
+      (f) P99 TTFT on Random-4000 Dataset
+    </td>
+  </tr>
+</table>
 
 #### Observations
 
-By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across different datasets with the exception of the Random-4000 dataset.
+By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across different datasets with the exception of the Random-4000 dataset. In that case, the ITL latency remains almost unchanged as the chunk size increases when mixed-running is disabled. But when mixed-running is enabled, the ITL latency increases all along with the chunk sizes.
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-w-wo-mixed-running.png" alt="Number of Queued Requests of Random-4000 Dataset when Prefilling"><br>
+      (a) Number of Queued Requests of Random-4000 Dataset when Prefilling
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-decode-queue-req-w-wo-mixed-running-chunk256.png" alt="Number of Queued Requests of Random-4000 Dataset after Decoding"><br>
+      (b) Number of Queued Requests of Random-4000 Dataset after Decoding (Chunk Size = 256)
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-decode-queue-req-w-wo-mixed-running.png" alt="Number of Queued Requests of Random-4000 Dataset after Decoding"><br>
+      (c) Number of Queued Requests of Random-4000 Dataset after Decoding (Other Chunk Sizes)
+    </td>
+  </tr>
+</table>
 
 ### Mixed-Running with Varying Chunk Sizes
 
