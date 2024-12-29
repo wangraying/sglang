@@ -338,7 +338,9 @@ Typically for very small chunk sizes, there tend to be a high TTFT latency due t
 
 The impact to TTFT differs across the datasets as the chunked prefill size increases. At an appropriate request rate, there is a chunk size threshold beyond which TTFT stabilizes. For the Random-1000 dataset, this threshold is at a chunk size of 1024, while for Random-2000, it is 2048. Figures (e) and (h) also demonstrate that the number of requests is relatively low at these threshold points.
 
-For the Random-4000 dataset, the situation is different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected due to the system's excessive queuing when processing long sequences. An increase in chunk size will increase the prefill batch size, which further improves prefill efficiency. We include Figures (d) and (f) to support our analysis.
+For the Random-4000 dataset, the situation is different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected since TTFT consists of queuing delay and prefill execution time. 
+An increase in chunk size will increase the prefill batch size, which could improve prefill efficiency and consequently reduce the queuing time.
+Our observations indicate that larger batches correspond to larger chunk sizes, and the system exhibits excessive queuing when processing long sequences. Figures (d) and (f) are included to support our analysis.
 
 <table>
   <tr>
@@ -435,4 +437,4 @@ By comparing the performance with mixed-running both enabled and disabled, we ob
 
 1. When mixed-running is enabled, We observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
 2. The impact to TTFT latency isn't quite direct. However, a trend similar to the one with mixed-running disabled is observed.
-3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. To meet stringent TTFT requirements, too small chunk sizes should be avoided to prevent excessive chunking. Too large chunk sizes are also inadvisable as they can trade latency for throughput when using large batch sizes. Mixed-running is preferred in order to improve throughput and ITL, but it may potentially hurt TTFT.
+3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. To meet stringent TTFT requirements, too small chunk sizes should be avoided to prevent excessive chunking. Too large chunk sizes are also inadvisable as increasing batch size after the hardware is saturated will extend the latency[[2]](https://arxiv.org/pdf/2401.11181). Mixed-running is preferred in order to improve throughput and ITL, but it may potentially hurt TTFT.
