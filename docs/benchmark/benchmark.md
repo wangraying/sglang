@@ -340,7 +340,7 @@ The impact to TTFT differs across the datasets as the chunked prefill size incre
 
 For the Random-4000 dataset, the situation is different; we observe a continued decrease in TTFT as the chunked prefill size increases. This is expected since TTFT consists of queuing delay and prefill execution time. 
 An increase in chunk size will increase the prefill batch size, which could improve prefill efficiency and consequently reduce the queuing time.
-Our observations indicate that larger batches correspond to larger chunk sizes, and the system exhibits excessive queuing when processing long sequences. Figures (d) and (f) are included to support our analysis.
+We observe that larger chunk sizes correspond to increased batch sizes, and the system exhibits excessive queuing when processing long sequences, as demonstrated in Figures (d) and (f).
 
 <table>
   <tr>
@@ -452,6 +452,10 @@ In fact, if we reduce the request rate to 1, the results show that, within the s
 
 #### Observations
 
-1. When mixed-running is enabled, We observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
-2. The impact to TTFT latency isn't quite direct. However, a trend similar to the one with mixed-running disabled is observed.
-3. The overall impact varies with the characteristics of the datasets. The optimal setting may need more sophisticated methods for exploration and exploitation. To meet stringent TTFT requirements, too small chunk sizes should be avoided to prevent excessive chunking. Too large chunk sizes are also inadvisable as increasing batch size after the hardware is saturated will extend the latency[[2]](https://arxiv.org/pdf/2401.11181). Mixed-running is preferred in order to improve throughput and ITL, but it may potentially hurt TTFT.
+When mixed-running is enabled, We observe an increased ITL latency as the chunked prefill size increases. This is because larger prefills will create *generation stalls*[[1]](https://www.usenix.org/system/files/osdi24-agrawal.pdf).
+The impact to TTFT latency isn't quite straightforward; however, a trend similar to that observed with mixed-running disabled is noted.
+
+The overall impact varies with the characteristics of the datasets, the system's capacity and the request rate. The optimal setting may need more sophisticated methods for exploration and exploitation.
+To meet stringent TTFT requirements, too small chunk sizes should be avoided to prevent excessive chunking. Too large chunk sizes are also inadvisable as increasing batch size after the hardware is saturated will extend the latency[[2]](https://arxiv.org/pdf/2401.11181). Mixed-running is preferred in order to improve throughput and ITL, but it could potentially hurt TTFT.
+
+However, when the request rate is too high, the first step should be to scale the system's capacity by adding more resources with carefully designed parallelism strategies. We leave this to future studies.
