@@ -401,6 +401,8 @@ The impact to ITL is not obvious, and it varies with the characteristics of the 
 
 By comparing the performance with mixed-running both enabled and disabled, we observe an expected increase in output throughput, which is typically along with a decreased ITL latency across different datasets with the exception of the Random-4000 dataset. In that case, the ITL latency remains almost unchanged as the chunk size increases when mixed-running is disabled. But when mixed-running is enabled, the ITL latency increases all along with the chunk sizes.
 
+For Random-4000 dataset, our observation indicate that enabling mixed-running with a chunk size of 256 significantly reduces the number of decode batches. This implies a considerable number of decode tokens are piggybacked with the prefill tokens, thereby enhancing the decode throughput and overall effiency. The reduction in TTFT and ITL can be largely attributed to decreased queuing delays, as illustrated in Figures (a), (b), and (c).
+
 <table>
   <tr>
     <td align="center">
@@ -414,6 +416,21 @@ By comparing the performance with mixed-running both enabled and disabled, we ob
     <td align="center">
       <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-decode-queue-req-w-wo-mixed-running.png" alt="Number of Queued Requests of Random-4000 Dataset after Decoding"><br>
       (c) Number of Queued Requests of Random-4000 Dataset after Decoding (Other Chunk Sizes)
+    </td>
+  </tr>
+</table>
+
+In fact, if we reduce the request rate to 1, the results show that, within the system's capacity, enabling mixed-chunk will improve ITL at the risk of hurting TTFT. More details can be found in Figures (d) and (e).
+
+<table>
+ <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-latency-w-wo-mixed-running-rate1.png" alt="P99 Latency on Random-4000 Dataset at Request Rate of 1"><br>
+      (d) P99 Latency on Random-4000 Dataset at Request Rate of 1
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/wangraying/sglang/refs/heads/v0.3.5.post2-dev/docs/images/random-4000-prefill-queue-req-w-wo-mixed-running-rate1.png" alt="Number of Queued Requests of Random-4000 Dataset when Prefilling at Request Rate of 1"><br>
+      (e) Number of Queued Requests of Random-4000 Dataset when Prefilling at Request Rate of 1
     </td>
   </tr>
 </table>
